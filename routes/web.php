@@ -1,19 +1,55 @@
 <?php
 
+use App\Http\Controllers\ContestController;
+use App\Http\Controllers\LineupController;
+use App\Http\Controllers\SimulationController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\GameController;
 use Illuminate\Support\Facades\Route;
 
+// Public routes
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('home');
 
-Route::get('/dashboard', function () {
-    return view('userzone.dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/rules', function () {
+    return view('rules');
+})->name('rules');
 
-Route::middleware('auth')->group(function () {
+// Authenticated routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('userzone.dashboard');
+    })->name('dashboard');
+
+    // Profile
     Route::get('/profile', [App\Http\Controllers\Userzone\ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [App\Http\Controllers\Userzone\ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [App\Http\Controllers\Userzone\ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Contests
+    Route::get('/contests', [ContestController::class, 'index'])->name('contests.index');
+    Route::get('/contests/{id}', [ContestController::class, 'show'])->name('contests.show');
+    Route::get('/games', [ContestController::class, 'games'])->name('games.index');
+
+    // Games
+    Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
+
+    // Lineups
+    Route::get('/lineups/create/{contest_id}', [LineupController::class, 'create'])->name('lineups.create');
+    Route::post('/lineups', [LineupController::class, 'store'])->name('lineups.store');
+    Route::get('/lineups', [LineupController::class, 'index'])->name('lineups.index');
+    Route::get('/lineups/{id}', [LineupController::class, 'show'])->name('lineups.show');
+});
+
+// Admin routes
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/contests/create', [AdminController::class, 'createContest'])->name('contests.create');
+    Route::post('/contests', [ContestController::class, 'store'])->name('contests.store');
+    Route::post('/contests/{id}/simulate', [SimulationController::class, 'simulate'])->name('contests.simulate');
+    Route::get('/import-players', [AdminController::class, 'importPlayers'])->name('import.players');
+    Route::post('/import-players', [AdminController::class, 'processImport'])->name('import.process');
 });
 
 require __DIR__.'/auth.php';

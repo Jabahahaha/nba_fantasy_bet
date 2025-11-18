@@ -15,11 +15,25 @@
                     <x-breeze.nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-breeze.nav-link>
+                    <x-breeze.nav-link :href="route('contests.index')" :active="request()->routeIs('contests.*')">
+                        {{ __('Contests') }}
+                    </x-breeze.nav-link>
+                    <x-breeze.nav-link :href="route('lineups.index')" :active="request()->routeIs('lineups.*')">
+                        {{ __('My Lineups') }}
+                    </x-breeze.nav-link>
+                    @if(Auth::user()->is_admin)
+                        <x-breeze.nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')" class="text-orange-600">
+                            {{ __('Admin Panel') }}
+                        </x-breeze.nav-link>
+                    @endif
                 </div>
             </div>
 
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <!-- Points Balance & Settings Dropdown -->
+            <div class="hidden sm:flex sm:items-center sm:ms-6 space-x-4">
+                <div class="px-3 py-2 bg-green-100 text-green-800 rounded-md font-semibold">
+                    {{ number_format(Auth::user()->points_balance) }} pts
+                </div>
                 <x-breeze.dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">

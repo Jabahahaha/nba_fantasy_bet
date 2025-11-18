@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "ndeblauw/starterpack",
+    "name": "mihailandreev/nba-fantasy-bet",
     "type": "project",
-    "description": "Educational skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "NBA Daily Fantasy Sports Platform - Build lineups, compete in contests, and win prizes!",
+    "keywords": ["laravel", "nba", "fantasy-sports", "daily-fantasy", "dfs"],
     "license": "MIT",
     "require": {
         "php": "^8.3",

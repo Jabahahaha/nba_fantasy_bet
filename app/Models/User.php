@@ -21,6 +21,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_admin',
+        'points_balance',
+        'total_contests_entered',
+        'total_winnings',
     ];
 
     /**
@@ -43,6 +47,73 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * Get all lineups for this user
+     */
+    public function lineups()
+    {
+        return $this->hasMany(Lineup::class);
+    }
+
+    /**
+     * Get all transactions for this user
+     */
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    /**
+     * Get the current balance
+     */
+    public function getCurrentBalance(): int
+    {
+        return $this->points_balance;
+    }
+
+    /**
+     * Add points to user balance
+     */
+    public function addPoints(int $amount, string $type, string $description, ?int $contestId = null): void
+    {
+        $this->points_balance += $amount;
+        $this->save();
+
+        Transaction::create([
+            'user_id' => $this->id,
+            'type' => $type,
+            'amount' => $amount,
+            'balance_after' => $this->points_balance,
+            'description' => $description,
+            'contest_id' => $contestId,
+        ]);
+    }
+
+    /**
+     * Deduct points from user balance
+     */
+    public function deductPoints(int $amount, string $type, string $description, ?int $contestId = null): bool
+    {
+        if ($this->points_balance < $amount) {
+            return false;
+        }
+
+        $this->points_balance -= $amount;
+        $this->save();
+
+        Transaction::create([
+            'user_id' => $this->id,
+            'type' => $type,
+            'amount' => -$amount,
+            'balance_after' => $this->points_balance,
+            'description' => $description,
+            'contest_id' => $contestId,
+        ]);
+
+        return true;
     }
 }
