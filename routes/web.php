@@ -50,6 +50,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/contests/{id}/simulate', [SimulationController::class, 'simulate'])->name('contests.simulate');
     Route::get('/import-players', [AdminController::class, 'importPlayers'])->name('import.players');
     Route::post('/import-players', [AdminController::class, 'processImport'])->name('import.process');
+
+    // Game simulation routes
+    Route::get('/games', [App\Http\Controllers\Admin\GameSimulationController::class, 'index'])->name('games.index');
+    Route::post('/games/simulate-date', [App\Http\Controllers\Admin\GameSimulationController::class, 'simulateDate'])->name('games.simulate-date');
+    Route::post('/games/{game}/simulate', [App\Http\Controllers\Admin\GameSimulationController::class, 'simulateGame'])->name('games.simulate');
+    Route::post('/games/reset-date', [App\Http\Controllers\Admin\GameSimulationController::class, 'resetDate'])->name('games.reset-date');
+    Route::post('/games/{game}/reset', [App\Http\Controllers\Admin\GameSimulationController::class, 'resetGame'])->name('games.reset');
 });
 
 require __DIR__.'/auth.php';

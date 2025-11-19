@@ -2,12 +2,8 @@
 
 A complete daily fantasy sports platform for NBA games. Build lineups, compete in contests, and win prizes!
 
-**By**: Mihai Landreev  
-**Tech**: Laravel 12, Alpine.js, Tailwind CSS
 
----
-
-## ⚡ Quick Setup
+##  Quick Setup
 
 ```bash
 # 1. Install dependencies
@@ -40,13 +36,13 @@ php artisan serve
 
 ---
 
-## 📖 Full Documentation
+##  Full Documentation
 
 See [SETUP.md](SETUP.md) for complete step-by-step instructions, troubleshooting, and detailed configuration.
 
 ---
 
-## ✨ Features
+##  Features
 
 - **User System**: Registration, login, virtual points balance
 - **Contest Types**: 50/50, GPP (Guaranteed Prize Pool), H2H (Head-to-Head)
@@ -59,7 +55,7 @@ See [SETUP.md](SETUP.md) for complete step-by-step instructions, troubleshooting
 
 ---
 
-## 🎯 What's Included
+##  What's Included
 
 - 11 database migrations (users, players, games, contests, lineups, etc.)
 - 8 Eloquent models with full relationships
@@ -74,7 +70,7 @@ See [SETUP.md](SETUP.md) for complete step-by-step instructions, troubleshooting
 
 ---
 
-## 🏆 How It Works
+##  How It Works
 
 1. **Admin creates contests** for specific NBA game dates
 2. **Users build lineups** with 8 players under $50k salary cap
@@ -84,14 +80,3 @@ See [SETUP.md](SETUP.md) for complete step-by-step instructions, troubleshooting
 6. **Prizes distributed automatically** to winners
 7. **Game scores calculated** by summing player points per team
 
----
-
-## 📝 License
-
-MIT License - Feel free to use for learning and development.
-
----
-
-**Ready to Play!** 🏀
-
-For complete setup instructions, see [SETUP.md](SETUP.md)

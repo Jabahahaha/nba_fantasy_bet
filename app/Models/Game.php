@@ -158,4 +158,21 @@ class Game extends Model
     {
         return $this->simulated_at !== null;
     }
+
+    /**
+     * Reset simulation data for this game
+     */
+    public function resetSimulation(): void
+    {
+        // Delete all player stats for this game
+        $this->playerStats()->delete();
+
+        // Reset game scores and status
+        $this->visitor_score = null;
+        $this->home_score = null;
+        $this->winner = null;
+        $this->status = 'scheduled';
+        $this->simulated_at = null;
+        $this->save();
+    }
 }

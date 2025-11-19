@@ -12,6 +12,9 @@
                 <a href="{{ route('admin.contests.create') }}" class="bg-blue-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700">
                     Create Contest
                 </a>
+                <a href="{{ route('admin.games.index') }}" class="bg-purple-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-purple-700">
+                    Manage Games
+                </a>
                 <a href="{{ route('admin.import.players') }}" class="bg-green-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700">
                     Import Players
                 </a>

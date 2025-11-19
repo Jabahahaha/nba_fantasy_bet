@@ -119,18 +119,24 @@ class GameSimulator
 
     /**
      * Simulate an entire contest
+     * Now uses existing game results instead of simulating new games
      */
     public function simulateContest(Contest $contest): void
     {
+        // First, ensure all games for the contest date are simulated
+        $games = Game::getGamesForDate($contest->contest_date);
+        foreach ($games as $game) {
+            if (!$game->isSimulated()) {
+                $this->simulateGame($game);
+            }
+        }
+
         $lineups = $contest->lineups()->with(['lineupPlayers.player'])->get();
 
         // Get teams playing on contest date
         $teamsPlaying = Game::getTeamsPlayingOnDate($contest->contest_date);
 
-        // Track all player performances for game score calculation
-        $allPlayerPerformances = [];
-
-        // Simulate each lineup
+        // Simulate each lineup using existing game results
         foreach ($lineups as $lineup) {
             foreach ($lineup->lineupPlayers as $lineupPlayer) {
                 $player = $lineupPlayer->player;
@@ -151,47 +157,54 @@ class GameSimulator
                     continue;
                 }
 
-                // Check if we already simulated this player
-                $playerKey = $player->id;
-                if (!isset($allPlayerPerformances[$playerKey])) {
-                    // First time simulating this player - generate stats
-                    $stats = $this->simulatePlayerPerformance($player);
-                    $fantasyPoints = $this->calculateFantasyPoints($stats);
+                // Get player's stats from the game that was already simulated
+                $game = Game::getGameForTeam($player->team, $contest->contest_date);
 
-                    // Store for reuse and game score calculation
-                    $allPlayerPerformances[$playerKey] = [
-                        'team' => $player->team,
-                        'points' => $stats['points'],
-                        'rebounds' => $stats['rebounds'],
-                        'assists' => $stats['assists'],
-                        'steals' => $stats['steals'],
-                        'blocks' => $stats['blocks'],
-                        'turnovers' => $stats['turnovers'],
-                        'fantasy_points' => $fantasyPoints,
-                    ];
-                } else {
-                    // Reuse already simulated stats for this player
-                    $stats = $allPlayerPerformances[$playerKey];
-                    $fantasyPoints = $stats['fantasy_points'];
+                if (!$game || !$game->isSimulated()) {
+                    // Game not found or not simulated - shouldn't happen, but handle gracefully
+                    $lineupPlayer->simulated_points = 0;
+                    $lineupPlayer->simulated_rebounds = 0;
+                    $lineupPlayer->simulated_assists = 0;
+                    $lineupPlayer->simulated_steals = 0;
+                    $lineupPlayer->simulated_blocks = 0;
+                    $lineupPlayer->simulated_turnovers = 0;
+                    $lineupPlayer->fantasy_points_earned = 0;
+                    $lineupPlayer->save();
+                    continue;
                 }
 
-                // Update lineup player
-                $lineupPlayer->simulated_points = $stats['points'];
-                $lineupPlayer->simulated_rebounds = $stats['rebounds'];
-                $lineupPlayer->simulated_assists = $stats['assists'];
-                $lineupPlayer->simulated_steals = $stats['steals'];
-                $lineupPlayer->simulated_blocks = $stats['blocks'];
-                $lineupPlayer->simulated_turnovers = $stats['turnovers'];
-                $lineupPlayer->fantasy_points_earned = $fantasyPoints;
+                // Get player's stats from the game
+                $playerStat = GamePlayerStat::where('game_id', $game->id)
+                    ->where('player_id', $player->id)
+                    ->first();
+
+                if (!$playerStat) {
+                    // Player didn't play in this game (not in top 10) - score 0
+                    $lineupPlayer->simulated_points = 0;
+                    $lineupPlayer->simulated_rebounds = 0;
+                    $lineupPlayer->simulated_assists = 0;
+                    $lineupPlayer->simulated_steals = 0;
+                    $lineupPlayer->simulated_blocks = 0;
+                    $lineupPlayer->simulated_turnovers = 0;
+                    $lineupPlayer->fantasy_points_earned = 0;
+                    $lineupPlayer->save();
+                    continue;
+                }
+
+                // Use existing stats from the game
+                $lineupPlayer->simulated_points = $playerStat->points;
+                $lineupPlayer->simulated_rebounds = $playerStat->rebounds;
+                $lineupPlayer->simulated_assists = $playerStat->assists;
+                $lineupPlayer->simulated_steals = $playerStat->steals;
+                $lineupPlayer->simulated_blocks = $playerStat->blocks;
+                $lineupPlayer->simulated_turnovers = $playerStat->turnovers;
+                $lineupPlayer->fantasy_points_earned = $playerStat->fantasy_points;
                 $lineupPlayer->save();
             }
 
             // Calculate total fantasy points for lineup
             $lineup->calculateFantasyPoints();
         }
-
-        // Calculate game scores from player performances
-        $this->calculateGameScores($contest->contest_date, $allPlayerPerformances);
 
         // Rank lineups by fantasy points
         $rankedLineups = $contest->lineups()
@@ -210,28 +223,23 @@ class GameSimulator
     }
 
     /**
-     * Calculate game scores for all games on a date
+     * Check if a player is playing on a given date
      */
-    private function calculateGameScores($date, array $playerPerformances): void
+    public function isPlayerPlaying(Player $player, $date): bool
     {
-        $games = Game::getGamesForDate($date);
-
-        foreach ($games as $game) {
-            // Only calculate if not already simulated
-            if (!$game->isSimulated()) {
-                // Generate stats for all players on both teams (not just lineup players)
-                $fullTeamPerformances = $this->generateFullTeamStats($game, $playerPerformances);
-                $game->calculateScores($fullTeamPerformances);
-            }
-        }
+        return Game::isTeamPlaying($player->team, $date);
     }
 
     /**
-     * Generate stats for top 10 players (by minutes) on both teams
+     * Simulate a single game independently
+     * This is the centralized game simulation method that all contests will use
      */
-    private function generateFullTeamStats(Game $game, array $existingPerformances): array
+    public function simulateGame(Game $game): void
     {
-        $allPerformances = $existingPerformances;
+        // Don't simulate if already simulated
+        if ($game->isSimulated()) {
+            return;
+        }
 
         // Get top 10 players by minutes per game for both teams
         $visitorPlayers = Player::where('team', $game->visitor_team)
@@ -248,33 +256,25 @@ class GameSimulator
 
         $allPlayers = $visitorPlayers->merge($homePlayers);
 
-        // Generate stats for players not already simulated
+        // Simulate performance for each player
+        $playerPerformances = [];
         foreach ($allPlayers as $player) {
-            if (!isset($allPerformances[$player->id])) {
-                $stats = $this->simulatePlayerPerformance($player);
-                $fantasyPoints = $this->calculateFantasyPoints($stats);
+            $stats = $this->simulatePlayerPerformance($player);
+            $fantasyPoints = $this->calculateFantasyPoints($stats);
 
-                $allPerformances[$player->id] = [
-                    'team' => $player->team,
-                    'points' => $stats['points'],
-                    'rebounds' => $stats['rebounds'],
-                    'assists' => $stats['assists'],
-                    'steals' => $stats['steals'],
-                    'blocks' => $stats['blocks'],
-                    'turnovers' => $stats['turnovers'],
-                    'fantasy_points' => $fantasyPoints,
-                ];
-            }
+            $playerPerformances[$player->id] = [
+                'team' => $player->team,
+                'points' => $stats['points'],
+                'rebounds' => $stats['rebounds'],
+                'assists' => $stats['assists'],
+                'steals' => $stats['steals'],
+                'blocks' => $stats['blocks'],
+                'turnovers' => $stats['turnovers'],
+                'fantasy_points' => $fantasyPoints,
+            ];
         }
 
-        return $allPerformances;
-    }
-
-    /**
-     * Check if a player is playing on a given date
-     */
-    public function isPlayerPlaying(Player $player, $date): bool
-    {
-        return Game::isTeamPlaying($player->team, $date);
+        // Calculate and save game scores
+        $game->calculateScores($playerPerformances);
     }
 }
