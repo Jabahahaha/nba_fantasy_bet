@@ -22,6 +22,8 @@ class Player extends Model
         'mpg',
         'salary',
         'is_playing',
+        'roster_status',
+        'roster_rank',
     ];
 
     protected $casts = [
@@ -33,6 +35,7 @@ class Player extends Model
         'topg' => 'decimal:1',
         'mpg' => 'decimal:1',
         'is_playing' => 'boolean',
+        'roster_rank' => 'integer',
     ];
 
     /**

@@ -4,6 +4,7 @@ use App\Http\Controllers\ContestController;
 use App\Http\Controllers\LineupController;
 use App\Http\Controllers\SimulationController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\RosterController;
 use App\Http\Controllers\GameController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +58,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/games/{game}/simulate', [App\Http\Controllers\Admin\GameSimulationController::class, 'simulateGame'])->name('games.simulate');
     Route::post('/games/reset-date', [App\Http\Controllers\Admin\GameSimulationController::class, 'resetDate'])->name('games.reset-date');
     Route::post('/games/{game}/reset', [App\Http\Controllers\Admin\GameSimulationController::class, 'resetGame'])->name('games.reset');
+
+    // Roster manager
+    Route::get('/rosters', [RosterController::class, 'index'])->name('rosters.index');
+    Route::patch('/rosters/{player}', [RosterController::class, 'update'])->name('rosters.update');
+    Route::post('/rosters/rebalance', [RosterController::class, 'rebalance'])->name('rosters.rebalance');
 });
 
 require __DIR__.'/auth.php';

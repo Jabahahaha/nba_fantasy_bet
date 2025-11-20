@@ -95,9 +95,9 @@ class ImportPlayers extends Command
                 Player::updateOrCreate(
                     [
                         'name' => $data['Player'],
-                        'team' => $team,
                     ],
                     [
+                        'team' => $team,
                         'position' => $position,
                         'ppg' => (float) ($data['PTS/G_2'] ?? $data['PTS/G'] ?? 0),
                         'rpg' => (float) ($data['TRB'] ?? 0),

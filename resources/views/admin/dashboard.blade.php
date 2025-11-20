@@ -18,6 +18,9 @@
                 <a href="{{ route('admin.import.players') }}" class="bg-green-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700">
                     Import Players
                 </a>
+                <a href="{{ route('admin.rosters.index') }}" class="bg-gray-800 text-white px-6 py-3 rounded-lg font-bold hover:bg-gray-900">
+                    Roster Manager
+                </a>
             </div>
 
             <!-- Contests -->

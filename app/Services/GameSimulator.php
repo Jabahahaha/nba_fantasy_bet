@@ -16,16 +16,18 @@ class GameSimulator
      */
     public function simulatePlayerPerformance(Player $player): array
     {
-        // Generate performance multiplier using bell curve
-        $multiplier = $this->generatePerformanceMultiplier();
+        $isLowVolumeScorer = $player->ppg < 20;
+
+        // Generate performance multiplier using bell curve with low-volume adjustments
+        $multiplier = $this->generatePerformanceMultiplierForPlayer($player);
 
         // Simulate each stat with the multiplier
-        $points = $this->simulateStat($player->ppg, $multiplier, 0, 50);
-        $rebounds = $this->simulateStat($player->rpg, $multiplier, 0, 20);
-        $assists = $this->simulateStat($player->apg, $multiplier, 0, 20);
-        $steals = $this->simulateStat($player->spg, $multiplier, 0, 5);
-        $blocks = $this->simulateStat($player->bpg, $multiplier, 0, 5);
-        $turnovers = $this->simulateStat($player->topg, $multiplier, 0, 8);
+        $points = $this->simulateStat($player->ppg, $multiplier, 0, 50, $isLowVolumeScorer);
+        $rebounds = $this->simulateStat($player->rpg, $multiplier, 0, 20, $isLowVolumeScorer);
+        $assists = $this->simulateStat($player->apg, $multiplier, 0, 20, $isLowVolumeScorer);
+        $steals = $this->simulateStat($player->spg, $multiplier, 0, 5, $isLowVolumeScorer);
+        $blocks = $this->simulateStat($player->bpg, $multiplier, 0, 5, $isLowVolumeScorer);
+        $turnovers = $this->simulateStat($player->topg, $multiplier, 0, 8, $isLowVolumeScorer);
 
         return [
             'points' => $points,
@@ -65,15 +67,49 @@ class GameSimulator
     }
 
     /**
+     * Creates a performance multiplier that biases low-volume scorers to underperform slightly more often.
+     */
+    private function generatePerformanceMultiplierForPlayer(Player $player): float
+    {
+        if ($player->ppg >= 20) {
+            return $this->generatePerformanceMultiplier();
+        }
+
+        $rand = mt_rand(1, 100);
+
+        if ($rand <= 25) {
+            // Heavy underperformance: 25%
+            return mt_rand(45, 75) / 100;
+        } elseif ($rand <= 60) {
+            // Below average but still volatile: 35%
+            return mt_rand(75, 95) / 100;
+        } elseif ($rand <= 85) {
+            // Average outing: 25%
+            return mt_rand(95, 110) / 100;
+        } elseif ($rand <= 95) {
+            // Good night still possible: 10%
+            return mt_rand(110, 130) / 100;
+        }
+
+        // Great games are rare but possible: 5%
+        return mt_rand(130, 150) / 100;
+    }
+
+    /**
      * Simulate a stat with variance and bounds
      */
-    private function simulateStat(float $average, float $multiplier, int $min, int $max): int
+    private function simulateStat(float $average, float $multiplier, int $min, int $max, bool $isLowVolumeScorer = false): int
     {
         // Apply multiplier
         $value = $average * $multiplier;
 
-        // Add small random variance (-10% to +10%)
-        $variance = mt_rand(-10, 10) / 100;
+        // Add random variance.
+        // Low-volume scorers are more volatile and skewed towards underperformance.
+        if ($isLowVolumeScorer) {
+            $variance = mt_rand(-25, 12) / 100;
+        } else {
+            $variance = mt_rand(-10, 10) / 100;
+        }
         $value = $value * (1 + $variance);
 
         // Ensure within bounds
