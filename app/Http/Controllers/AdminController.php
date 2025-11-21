@@ -40,21 +40,42 @@ class AdminController extends Controller
      */
     public function updateRoster(Request $request)
     {
-        $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt',
-        ]);
+        try {
+            $request->validate([
+                'csv_file' => 'required|file|mimes:csv,txt',
+            ]);
 
-        $file = $request->file('csv_file');
-        $filename = 'players_' . time() . '.csv';
-        $file->storeAs('', $filename);
+            $file = $request->file('csv_file');
 
-        // Run import command
-        \Artisan::call('import:players', ['file' => $filename]);
+            if (!$file) {
+                return back()->with('error', 'No file uploaded.');
+            }
 
-        $output = \Artisan::output();
+            $filename = 'players_' . time() . '.csv';
+            $path = $file->storeAs('', $filename);
 
-        return back()->with('success', 'Roster updated successfully!')
-            ->with('roster_output', $output);
+            if (!$path) {
+                return back()->with('error', 'Failed to save uploaded file.');
+            }
+
+            // Run import command
+            $exitCode = \Artisan::call('import:players', ['file' => $filename]);
+            $output = \Artisan::output();
+
+            // Clean up the uploaded file
+            \Storage::delete($filename);
+
+            if ($exitCode !== 0) {
+                return back()->with('error', 'Import failed. Check the file format.')
+                    ->with('roster_output', $output);
+            }
+
+            return back()->with('success', 'Roster updated successfully!')
+                ->with('roster_output', $output);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -62,20 +83,41 @@ class AdminController extends Controller
      */
     public function updateSchedule(Request $request)
     {
-        $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt',
-        ]);
+        try {
+            $request->validate([
+                'csv_file' => 'required|file|mimes:csv,txt',
+            ]);
 
-        $file = $request->file('csv_file');
-        $filename = 'games_' . time() . '.csv';
-        $file->storeAs('', $filename);
+            $file = $request->file('csv_file');
 
-        // Run import command
-        \Artisan::call('import:games', ['file' => $filename]);
+            if (!$file) {
+                return back()->with('error', 'No file uploaded.');
+            }
 
-        $output = \Artisan::output();
+            $filename = 'games_' . time() . '.csv';
+            $path = $file->storeAs('', $filename);
 
-        return back()->with('success', 'Schedule updated successfully!')
-            ->with('schedule_output', $output);
+            if (!$path) {
+                return back()->with('error', 'Failed to save uploaded file.');
+            }
+
+            // Run import command
+            $exitCode = \Artisan::call('import:games', ['file' => $filename]);
+            $output = \Artisan::output();
+
+            // Clean up the uploaded file
+            \Storage::delete($filename);
+
+            if ($exitCode !== 0) {
+                return back()->with('error', 'Import failed. Check the file format.')
+                    ->with('schedule_output', $output);
+            }
+
+            return back()->with('success', 'Schedule updated successfully!')
+                ->with('schedule_output', $output);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 }

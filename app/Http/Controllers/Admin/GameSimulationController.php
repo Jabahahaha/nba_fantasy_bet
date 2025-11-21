@@ -22,8 +22,8 @@ class GameSimulationController extends Controller
      */
     public function index()
     {
-        // Get all games grouped by date
-        $games = Game::orderBy('game_date', 'desc')
+        // Get all games grouped by date (earliest first)
+        $games = Game::orderBy('game_date', 'asc')
             ->orderBy('start_time', 'asc')
             ->get()
             ->groupBy('game_date');

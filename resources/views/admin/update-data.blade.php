@@ -7,8 +7,21 @@
 
     <div class="py-12">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+            <!-- Success/Error Messages -->
+            @if (session('success'))
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <span class="block sm:inline">{{ session('success') }}</span>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <span class="block sm:inline">{{ session('error') }}</span>
+                </div>
+            @endif
+
             <!-- Tab Navigation -->
-            <div class="mb-6 border-b border-gray-200" x-data="{ activeTab: 'roster' }">
+            <div class="mb-6 border-b border-gray-200" x-data="{ activeTab: '{{ session('roster_output') ? 'roster' : (session('schedule_output') ? 'schedule' : 'roster') }}' }">
                 <nav class="-mb-px flex space-x-8">
                     <button
                         @click="activeTab = 'roster'"

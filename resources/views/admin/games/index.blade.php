@@ -46,23 +46,39 @@
 
             <!-- Games grouped by date -->
             @forelse($games as $date => $dateGames)
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-bold">
-                                {{ \Carbon\Carbon::parse($date)->format('l, F j, Y') }}
-                                <span class="text-sm font-normal text-gray-500">
-                                    ({{ $dateGames->count() }} {{ $dateGames->count() === 1 ? 'game' : 'games' }})
-                                </span>
-                            </h3>
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-3" x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }">
+                    <!-- Date Header - Clickable -->
+                    <div class="px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors" @click="open = !open">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <!-- Dropdown Arrow -->
+                                <svg class="w-5 h-5 text-gray-500 transition-transform duration-200"
+                                     :class="{ 'rotate-90': open }"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
 
-                            <div class="flex gap-2">
+                                <div>
+                                    <h3 class="text-lg font-bold">
+                                        {{ \Carbon\Carbon::parse($date)->format('l, F j, Y') }}
+                                    </h3>
+                                    <div class="flex gap-4 text-sm text-gray-500 mt-1">
+                                        <span>{{ $dateGames->count() }} {{ $dateGames->count() === 1 ? 'game' : 'games' }}</span>
+                                        <span>•</span>
+                                        <span>{{ $dateGames->where('status', 'completed')->count() }} simulated</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2" @click.stop>
                                 <!-- Simulate All Games Button -->
                                 <form action="{{ route('admin.games.simulate-date') }}" method="POST" class="inline">
                                     @csrf
                                     <input type="hidden" name="date" value="{{ $date }}">
                                     <button type="submit"
-                                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm"
+                                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                             @if($dateGames->every(fn($game) => $game->isSimulated())) disabled @endif>
                                         Simulate All
                                     </button>
@@ -74,15 +90,19 @@
                                     @csrf
                                     <input type="hidden" name="date" value="{{ $date }}">
                                     <button type="submit"
-                                            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm"
+                                            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                             @if($dateGames->every(fn($game) => !$game->isSimulated())) disabled @endif>
                                         Reset All
                                     </button>
                                 </form>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Games Table -->
+                    <!-- Games Table - Collapsible -->
+                    <div x-show="open"
+                         x-collapse
+                         class="border-t border-gray-200">
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">

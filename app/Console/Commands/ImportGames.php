@@ -165,7 +165,7 @@ class ImportGames extends Command
         $teamMap = [
             'Atlanta Hawks' => 'ATL',
             'Boston Celtics' => 'BOS',
-            'Brooklyn Nets' => 'BKN',
+            'Brooklyn Nets' => 'BRK',
             'Charlotte Hornets' => 'CHO',
             'Chicago Bulls' => 'CHI',
             'Cleveland Cavaliers' => 'CLE',
@@ -186,7 +186,7 @@ class ImportGames extends Command
             'Oklahoma City Thunder' => 'OKC',
             'Orlando Magic' => 'ORL',
             'Philadelphia 76ers' => 'PHI',
-            'Phoenix Suns' => 'PHX',
+            'Phoenix Suns' => 'PHO',
             'Portland Trail Blazers' => 'POR',
             'Sacramento Kings' => 'SAC',
             'San Antonio Spurs' => 'SAS',
