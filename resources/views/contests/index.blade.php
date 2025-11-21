@@ -92,14 +92,24 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $contest->lock_time->format('M d, Y g:i A') }}
+                                        @if(!$contest->isLocked())
+                                            <br>
+                                            <span class="text-xs text-blue-600 font-medium">
+                                                Locks in {{ $contest->lock_time->diffForHumans() }}
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         @if($contest->isOpen())
                                             <a href="{{ route('lineups.create', $contest->id) }}" class="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">
                                                 Join
                                             </a>
+                                        @elseif($contest->isLocked())
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                                                🔒 Locked
+                                            </span>
                                         @else
-                                            <span class="text-gray-400">Closed</span>
+                                            <span class="text-gray-400">Full</span>
                                         @endif
                                     </td>
                                 </tr>

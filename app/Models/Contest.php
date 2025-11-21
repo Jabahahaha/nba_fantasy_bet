@@ -54,6 +54,25 @@ class Contest extends Model
     }
 
     /**
+     * Check if contest is locked
+     */
+    public function isLocked(): bool
+    {
+        return $this->lock_time->isPast() || $this->status !== 'upcoming';
+    }
+
+    /**
+     * Get seconds until lock time
+     */
+    public function getSecondsUntilLock(): int
+    {
+        if ($this->lock_time->isPast()) {
+            return 0;
+        }
+        return $this->lock_time->diffInSeconds(now());
+    }
+
+    /**
      * Lock the contest
      */
     public function lock(): void

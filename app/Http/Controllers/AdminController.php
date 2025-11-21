@@ -28,17 +28,17 @@ class AdminController extends Controller
     }
 
     /**
-     * Show player import page
+     * Show data update page
      */
-    public function importPlayers()
+    public function updateData()
     {
-        return view('admin.import-players');
+        return view('admin.update-data');
     }
 
     /**
-     * Process player import
+     * Update player roster
      */
-    public function processImport(Request $request)
+    public function updateRoster(Request $request)
     {
         $request->validate([
             'csv_file' => 'required|file|mimes:csv,txt',
@@ -53,7 +53,29 @@ class AdminController extends Controller
 
         $output = \Artisan::output();
 
-        return back()->with('success', 'Players imported successfully!')
-            ->with('output', $output);
+        return back()->with('success', 'Roster updated successfully!')
+            ->with('roster_output', $output);
+    }
+
+    /**
+     * Update game schedule
+     */
+    public function updateSchedule(Request $request)
+    {
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt',
+        ]);
+
+        $file = $request->file('csv_file');
+        $filename = 'games_' . time() . '.csv';
+        $file->storeAs('', $filename);
+
+        // Run import command
+        \Artisan::call('import:games', ['file' => $filename]);
+
+        $output = \Artisan::output();
+
+        return back()->with('success', 'Schedule updated successfully!')
+            ->with('schedule_output', $output);
     }
 }

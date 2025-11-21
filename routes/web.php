@@ -49,8 +49,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/contests/create', [AdminController::class, 'createContest'])->name('contests.create');
     Route::post('/contests', [ContestController::class, 'store'])->name('contests.store');
     Route::post('/contests/{id}/simulate', [SimulationController::class, 'simulate'])->name('contests.simulate');
-    Route::get('/import-players', [AdminController::class, 'importPlayers'])->name('import.players');
-    Route::post('/import-players', [AdminController::class, 'processImport'])->name('import.process');
+
+    // Data update routes
+    Route::get('/update-data', [AdminController::class, 'updateData'])->name('update.data');
+    Route::post('/update-roster', [AdminController::class, 'updateRoster'])->name('roster.update');
+    Route::post('/update-schedule', [AdminController::class, 'updateSchedule'])->name('schedule.update');
 
     // Game simulation routes
     Route::get('/games', [App\Http\Controllers\Admin\GameSimulationController::class, 'index'])->name('games.index');

@@ -26,7 +26,11 @@ php artisan set:rosters
 # 5. Build assets
 npm run build
 
-# 6. Run (use Herd or artisan serve)
+# 6. Setup scheduler (for auto-simulation)
+# Add to crontab: * * * * * cd /path-to-project && php artisan schedule:run >> /dev/null 2>&1
+# Or if using Herd: * * * * * cd /path-to-project && ~/.composer/vendor/bin/herd php artisan schedule:run >> /dev/null 2>&1
+
+# 7. Run (use Herd or artisan serve)
 php artisan serve
 ```
 
@@ -74,9 +78,17 @@ See [SETUP.md](SETUP.md) for complete step-by-step instructions, troubleshooting
 
 1. **Admin creates contests** for specific NBA game dates
 2. **Users build lineups** with 8 players under $50k salary cap
-3. **Contest locks** at specified time
-4. **Admin simulates** contest results
+3. **Contest locks** at specified time (with live countdown timer)
+4. **Games auto-simulate** at their scheduled start time (or manually via admin panel)
 5. **System calculates fantasy points** using DraftKings formula
 6. **Prizes distributed automatically** to winners
 7. **Game scores calculated** by summing player points per team
+
+### Automatic Game Simulation
+Games are automatically simulated at their start time when the Laravel scheduler is running:
+- Checks every 5 minutes for games ready to simulate
+- Simulates games that have passed their start time
+- Manual override available in admin panel
+
+**To enable**: Add the scheduler to crontab (see Quick Setup step 6)
 

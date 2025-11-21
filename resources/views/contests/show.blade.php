@@ -10,7 +10,7 @@
             <!-- Contest Info -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
-                    <div class="grid md:grid-cols-4 gap-4">
+                    <div class="grid md:grid-cols-5 gap-4 mb-4">
                         <div>
                             <p class="text-sm text-gray-500">Contest Type</p>
                             <p class="text-lg font-bold">{{ $contest->contest_type }}</p>
@@ -27,9 +27,89 @@
                             <p class="text-sm text-gray-500">Entries</p>
                             <p class="text-lg font-bold">{{ $contest->current_entries }} / {{ $contest->max_entries }}</p>
                         </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Status</p>
+                            @if($contest->isLocked())
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
+                                    🔒 Locked
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                                    ✓ Open
+                                </span>
+                            @endif
+                        </div>
                     </div>
+
+                    <!-- Countdown Timer -->
+                    @if(!$contest->isLocked())
+                        <div class="border-t border-gray-200 pt-4 mt-4">
+                            <div class="text-center">
+                                <p class="text-sm text-gray-500 mb-2">Contest Locks In</p>
+                                <div
+                                    x-data="countdown({{ $contest->getSecondsUntilLock() }})"
+                                    x-init="start()"
+                                    class="text-3xl font-bold text-blue-600"
+                                >
+                                    <span x-text="display"></span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">
+                                    Lock Time: {{ $contest->lock_time->format('M j, Y g:i A') }}
+                                </p>
+                            </div>
+                        </div>
+                    @else
+                        <div class="border-t border-gray-200 pt-4 mt-4">
+                            <div class="text-center">
+                                <p class="text-sm text-gray-500">Contest Locked</p>
+                                <p class="text-lg font-semibold text-red-600">No more entries allowed</p>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
+
+            <script>
+                function countdown(seconds) {
+                    return {
+                        remaining: seconds,
+                        display: '',
+                        interval: null,
+
+                        start() {
+                            this.updateDisplay();
+                            this.interval = setInterval(() => {
+                                if (this.remaining > 0) {
+                                    this.remaining--;
+                                    this.updateDisplay();
+                                } else {
+                                    clearInterval(this.interval);
+                                    this.display = 'LOCKED';
+                                    // Reload page when contest locks
+                                    setTimeout(() => window.location.reload(), 1000);
+                                }
+                            }, 1000);
+                        },
+
+                        updateDisplay() {
+                            const days = Math.floor(this.remaining / 86400);
+                            const hours = Math.floor((this.remaining % 86400) / 3600);
+                            const minutes = Math.floor((this.remaining % 3600) / 60);
+                            const seconds = this.remaining % 60;
+
+                            if (days > 0) {
+                                this.display = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                            } else if (hours > 0) {
+                                this.display = `${hours}h ${minutes}m ${seconds}s`;
+                            } else if (minutes > 0) {
+                                this.display = `${minutes}m ${seconds}s`;
+                            } else {
+                                this.display = `${seconds}s`;
+                            }
+                        }
+                    }
+                }
+            </script>
 
             <!-- Games for this Contest -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
