@@ -242,7 +242,22 @@ class LineupController extends Controller
             ->orderBy('salary', 'desc')
             ->get();
 
-        return view('lineups.edit', compact('lineup', 'players'));
+        // Format existing lineup for JavaScript
+        $existingLineup = $lineup->lineupPlayers->map(function($lp) {
+            return [
+                'position_slot' => $lp->position_slot,
+                'player' => [
+                    'id' => $lp->player->id,
+                    'name' => $lp->player->name,
+                    'position' => $lp->player->position,
+                    'salary' => $lp->player->salary,
+                    'team' => $lp->player->team,
+                    'ppg' => $lp->player->ppg
+                ]
+            ];
+        });
+
+        return view('lineups.edit', compact('lineup', 'players', 'existingLineup'));
     }
 
     /**

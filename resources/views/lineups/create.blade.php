@@ -167,6 +167,10 @@
         function lineupBuilder() {
             return {
                 filterPosition: '',
+                filterTeam: '',
+                filterSalary: '',
+                sortBy: 'salary-desc',
+                searchQuery: '',
                 lineupName: '',
                 slots: [
                     { position: 'PG', player: null },
@@ -180,6 +184,40 @@
                 ],
                 totalSalary: 0,
                 remaining: 50000,
+
+                filterPlayer(id, name, position, team, salary) {
+                    // Check search query
+                    if (this.searchQuery && !name.toLowerCase().includes(this.searchQuery.toLowerCase())) {
+                        return false;
+                    }
+
+                    // Check position filter
+                    if (this.filterPosition && position !== this.filterPosition) {
+                        return false;
+                    }
+
+                    // Check team filter
+                    if (this.filterTeam && team !== this.filterTeam) {
+                        return false;
+                    }
+
+                    // Check salary filter
+                    if (this.filterSalary) {
+                        if (this.filterSalary === '10000+' && salary < 10000) {
+                            return false;
+                        } else if (this.filterSalary === '8000-10000' && (salary < 8000 || salary > 10000)) {
+                            return false;
+                        } else if (this.filterSalary === '6000-8000' && (salary < 6000 || salary > 8000)) {
+                            return false;
+                        } else if (this.filterSalary === '4000-6000' && (salary < 4000 || salary > 6000)) {
+                            return false;
+                        } else if (this.filterSalary === '0-4000' && salary >= 4000) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                },
 
                 addPlayer(id, name, position, salary, team, ppg) {
                     // Check if player already added
