@@ -213,4 +213,130 @@ class LineupController extends Controller
 
         return view('lineups.show', compact('lineup'));
     }
+
+    /**
+     * Show edit lineup form
+     */
+    public function edit($id)
+    {
+        $lineup = Lineup::with(['contest', 'lineupPlayers.player'])
+            ->findOrFail($id);
+
+        // Check authorization
+        if ($lineup->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Check if contest is still open
+        if ($lineup->contest->isLocked()) {
+            return redirect()->route('lineups.show', $id)
+                ->with('error', 'Contest is locked. Cannot edit lineup.');
+        }
+
+        // Get teams playing on contest date
+        $teamsPlaying = \App\Models\Game::getTeamsPlayingOnDate($lineup->contest->contest_date);
+
+        // Get available players
+        $players = Player::where('is_playing', true)
+            ->whereIn('team', $teamsPlaying)
+            ->orderBy('salary', 'desc')
+            ->get();
+
+        return view('lineups.edit', compact('lineup', 'players'));
+    }
+
+    /**
+     * Update lineup
+     */
+    public function update(Request $request, $id)
+    {
+        $lineup = Lineup::findOrFail($id);
+
+        // Check authorization
+        if ($lineup->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Check if contest is still open
+        if ($lineup->contest->isLocked()) {
+            return back()->with('error', 'Contest is locked. Cannot edit lineup.');
+        }
+
+        $validated = $request->validate([
+            'lineup_name' => 'nullable|string|max:255',
+            'players' => 'required|array|size:8',
+            'players.*.player_id' => 'required|exists:players,id',
+            'players.*.position_slot' => 'required|in:PG,SG,SF,PF,C,G,F,UTIL',
+        ]);
+
+        // Get selected players
+        $playerIds = collect($validated['players'])->pluck('player_id')->toArray();
+        $players = Player::whereIn('id', $playerIds)->get()->keyBy('id');
+
+        // Calculate total salary
+        $totalSalary = 0;
+        foreach ($playerIds as $playerId) {
+            $totalSalary += $players[$playerId]->salary;
+        }
+
+        if ($totalSalary > 50000) {
+            return back()->with('error', 'Total salary exceeds $50,000 cap.');
+        }
+
+        // Validate position requirements
+        $positionSlots = collect($validated['players'])->pluck('position_slot')->toArray();
+        $requiredSlots = ['PG', 'SG', 'SF', 'PF', 'C', 'G', 'F', 'UTIL'];
+
+        foreach ($requiredSlots as $required) {
+            if (!in_array($required, $positionSlots)) {
+                return back()->with('error', "Missing required position: {$required}");
+            }
+        }
+
+        // Validate G and F slots
+        foreach ($validated['players'] as $playerData) {
+            if ($playerData['position_slot'] === 'G') {
+                $player = $players[$playerData['player_id']];
+                if (!in_array($player->position, ['PG', 'SG'])) {
+                    return back()->with('error', 'G slot must contain a guard (PG or SG).');
+                }
+            }
+            if ($playerData['position_slot'] === 'F') {
+                $player = $players[$playerData['player_id']];
+                if (!in_array($player->position, ['SF', 'PF'])) {
+                    return back()->with('error', 'F slot must contain a forward (SF or PF).');
+                }
+            }
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // Update lineup name and salary
+            $lineup->lineup_name = $validated['lineup_name'] ?? $lineup->lineup_name;
+            $lineup->total_salary_used = $totalSalary;
+            $lineup->save();
+
+            // Delete old players
+            $lineup->lineupPlayers()->delete();
+
+            // Add new players
+            foreach ($validated['players'] as $playerData) {
+                LineupPlayer::create([
+                    'lineup_id' => $lineup->id,
+                    'player_id' => $playerData['player_id'],
+                    'position_slot' => $playerData['position_slot'],
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('lineups.show', $lineup->id)
+                ->with('success', 'Lineup updated successfully!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to update lineup: ' . $e->getMessage());
+        }
+    }
 }

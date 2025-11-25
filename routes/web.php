@@ -41,6 +41,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/lineups', [LineupController::class, 'store'])->name('lineups.store');
     Route::get('/lineups', [LineupController::class, 'index'])->name('lineups.index');
     Route::get('/lineups/{id}', [LineupController::class, 'show'])->name('lineups.show');
+    Route::get('/lineups/{id}/edit', [LineupController::class, 'edit'])->name('lineups.edit');
+    Route::put('/lineups/{id}', [LineupController::class, 'update'])->name('lineups.update');
 });
 
 // Admin routes

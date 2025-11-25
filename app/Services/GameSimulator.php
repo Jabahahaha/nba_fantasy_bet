@@ -254,6 +254,9 @@ class GameSimulator
             $rank++;
         }
 
+        // Calculate prize structure based on final entry count
+        $contest->calculatePrizes();
+
         // Distribute prizes
         $contest->distributePrizes();
     }

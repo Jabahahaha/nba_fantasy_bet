@@ -11,83 +11,33 @@
                 <!-- Player List -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <h3 class="text-lg font-bold mb-4">Available Players ({{ count($players) }})</h3>
+                        <h3 class="text-lg font-bold mb-4">Available Players</h3>
 
-                        <!-- Search and Filters -->
-                        <div class="mb-4 space-y-2">
-                            <!-- Search Bar -->
-                            <input type="text"
-                                   x-model="searchQuery"
-                                   placeholder="Search players by name..."
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-
-                            <!-- Filters Row -->
-                            <div class="flex gap-2">
-                                <select x-model="filterPosition" class="flex-1 rounded-md border-gray-300 text-sm">
-                                    <option value="">All Positions</option>
-                                    <option value="PG">PG</option>
-                                    <option value="SG">SG</option>
-                                    <option value="SF">SF</option>
-                                    <option value="PF">PF</option>
-                                    <option value="C">C</option>
-                                </select>
-
-                                <select x-model="filterTeam" class="flex-1 rounded-md border-gray-300 text-sm">
-                                    <option value="">All Teams</option>
-                                    @php
-                                        $teams = $players->pluck('team')->unique()->sort()->values();
-                                    @endphp
-                                    @foreach($teams as $team)
-                                        <option value="{{ $team }}">{{ $team }}</option>
-                                    @endforeach
-                                </select>
-
-                                <select x-model="filterSalary" class="flex-1 rounded-md border-gray-300 text-sm">
-                                    <option value="">All Salaries</option>
-                                    <option value="10000+">$10k+</option>
-                                    <option value="8000-10000">$8k-$10k</option>
-                                    <option value="6000-8000">$6k-$8k</option>
-                                    <option value="4000-6000">$4k-$6k</option>
-                                    <option value="0-4000">Under $4k</option>
-                                </select>
-                            </div>
-
-                            <!-- Sort Options -->
-                            <div class="flex gap-2">
-                                <select x-model="sortBy" class="flex-1 rounded-md border-gray-300 text-sm">
-                                    <option value="salary-desc">Salary (High-Low)</option>
-                                    <option value="salary-asc">Salary (Low-High)</option>
-                                    <option value="ppg-desc">PPG (High-Low)</option>
-                                    <option value="name-asc">Name (A-Z)</option>
-                                </select>
-                            </div>
+                        <!-- Filters -->
+                        <div class="mb-4 flex space-x-2">
+                            <select x-model="filterPosition" class="rounded-md border-gray-300">
+                                <option value="">All Positions</option>
+                                <option value="PG">PG</option>
+                                <option value="SG">SG</option>
+                                <option value="SF">SF</option>
+                                <option value="PF">PF</option>
+                                <option value="C">C</option>
+                            </select>
                         </div>
 
                         <!-- Player List -->
                         <div class="space-y-2 max-h-[600px] overflow-y-auto">
                             @foreach($players as $player)
-                                <div x-show="filterPlayer({{ $player->id }}, '{{ $player->name }}', '{{ $player->position }}', '{{ $player->team }}', {{ $player->salary }})"
-                                     class="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition"
-                                     @click="addPlayer({{ $player->id }}, '{{ $player->name }}', '{{ $player->position }}', {{ $player->salary }}, '{{ $player->team }}', {{ $player->ppg }}, {{ $player->rpg }}, {{ $player->apg }}, {{ $player->spg }}, {{ $player->bpg }})">
-                                    <div class="flex justify-between items-start">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2">
-                                                <p class="font-bold">{{ $player->name }}</p>
-                                                <span class="text-xs bg-gray-100 px-2 py-0.5 rounded">{{ $player->position }}</span>
-                                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">{{ $player->team }}</span>
-                                            </div>
-                                            <div class="mt-1 flex gap-3 text-xs text-gray-600">
-                                                <span title="Points Per Game"><strong>{{ number_format($player->ppg, 1) }}</strong> PPG</span>
-                                                <span title="Rebounds Per Game"><strong>{{ number_format($player->rpg, 1) }}</strong> RPG</span>
-                                                <span title="Assists Per Game"><strong>{{ number_format($player->apg, 1) }}</strong> APG</span>
-                                                @if($player->spg > 0 || $player->bpg > 0)
-                                                    <span class="text-green-600" title="Steals/Blocks"><strong>{{ number_format($player->spg, 1) }}</strong> S / <strong>{{ number_format($player->bpg, 1) }}</strong> B</span>
-                                                @endif
-                                            </div>
+                                <div x-show="filterPosition === '' || '{{ $player->position }}' === filterPosition"
+                                     class="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer"
+                                     @click="addPlayer({{ $player->id }}, '{{ $player->name }}', '{{ $player->position }}', {{ $player->salary }}, '{{ $player->team }}', {{ $player->ppg }})">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <p class="font-bold">{{ $player->name }}</p>
+                                            <p class="text-sm text-gray-600">{{ $player->position }} - {{ $player->team }} | {{ $player->ppg }} PPG</p>
                                         </div>
-                                        <div class="text-right ml-3">
-                                            <p class="font-bold text-lg">${{ number_format($player->salary) }}</p>
-                                            <p class="text-xs text-gray-500">{{ number_format($player->mpg, 1) }} MPG</p>
+                                        <div class="text-right">
+                                            <p class="font-bold">${{ number_format($player->salary) }}</p>
                                         </div>
                                     </div>
                                 </div>
