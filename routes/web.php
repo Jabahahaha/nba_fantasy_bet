@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Contests
     Route::get('/contests', [ContestController::class, 'index'])->name('contests.index');
     Route::get('/contests/{id}', [ContestController::class, 'show'])->name('contests.show');
+    Route::get('/contest-history', [ContestController::class, 'history'])->name('contests.history');
     Route::get('/games', [ContestController::class, 'games'])->name('games.index');
 
     // Games

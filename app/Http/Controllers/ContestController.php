@@ -99,4 +99,58 @@ class ContestController extends Controller
 
         return view('contests.games', compact('games', 'date'));
     }
+
+    /**
+     * Show contest history for authenticated user
+     */
+    public function history()
+    {
+        $user = Auth::user();
+
+        // Get all contests user has entered (with completed status)
+        $contests = Contest::whereHas('lineups', function($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+        ->with(['lineups' => function($query) use ($user) {
+            $query->where('user_id', $user->id)
+                  ->with('contest');
+        }])
+        ->where('status', 'completed')
+        ->orderBy('contest_date', 'desc')
+        ->get();
+
+        // Calculate user statistics
+        $totalContests = $contests->count();
+        $totalWinnings = $contests->sum(function($contest) use ($user) {
+            return $contest->lineups->where('user_id', $user->id)->sum('prize_won');
+        });
+        $totalSpent = $contests->sum(function($contest) use ($user) {
+            return $contest->entry_fee * $contest->lineups->where('user_id', $user->id)->count();
+        });
+
+        // Calculate win rate (top 3 finishes)
+        $topThreeFinishes = $contests->filter(function($contest) use ($user) {
+            $lineup = $contest->lineups->where('user_id', $user->id)->first();
+            return $lineup && $lineup->final_rank && $lineup->final_rank <= 3;
+        })->count();
+
+        $winRate = $totalContests > 0 ? round(($topThreeFinishes / $totalContests) * 100, 1) : 0;
+
+        // Calculate average finish
+        $finishes = $contests->map(function($contest) use ($user) {
+            $lineup = $contest->lineups->where('user_id', $user->id)->first();
+            return $lineup ? $lineup->final_rank : null;
+        })->filter()->values();
+
+        $avgFinish = $finishes->count() > 0 ? round($finishes->avg(), 1) : 0;
+
+        return view('contests.history', compact(
+            'contests',
+            'totalContests',
+            'totalWinnings',
+            'totalSpent',
+            'winRate',
+            'avgFinish'
+        ));
+    }
 }

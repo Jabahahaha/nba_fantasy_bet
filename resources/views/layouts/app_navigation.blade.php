@@ -15,11 +15,14 @@
                     <x-breeze.nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-breeze.nav-link>
-                    <x-breeze.nav-link :href="route('contests.index')" :active="request()->routeIs('contests.*')">
+                    <x-breeze.nav-link :href="route('contests.index')" :active="request()->routeIs('contests.index')">
                         {{ __('Contests') }}
                     </x-breeze.nav-link>
                     <x-breeze.nav-link :href="route('lineups.index')" :active="request()->routeIs('lineups.*')">
                         {{ __('My Lineups') }}
+                    </x-breeze.nav-link>
+                    <x-breeze.nav-link :href="route('contests.history')" :active="request()->routeIs('contests.history')">
+                        {{ __('History') }}
                     </x-breeze.nav-link>
                     @if(Auth::user()->is_admin)
                         <x-breeze.nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')" class="text-orange-600">
@@ -84,6 +87,20 @@
             <x-breeze.responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-breeze.responsive-nav-link>
+            <x-breeze.responsive-nav-link :href="route('contests.index')" :active="request()->routeIs('contests.index')">
+                {{ __('Contests') }}
+            </x-breeze.responsive-nav-link>
+            <x-breeze.responsive-nav-link :href="route('lineups.index')" :active="request()->routeIs('lineups.*')">
+                {{ __('My Lineups') }}
+            </x-breeze.responsive-nav-link>
+            <x-breeze.responsive-nav-link :href="route('contests.history')" :active="request()->routeIs('contests.history')">
+                {{ __('History') }}
+            </x-breeze.responsive-nav-link>
+            @if(Auth::user()->is_admin)
+                <x-breeze.responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">
+                    {{ __('Admin Panel') }}
+                </x-breeze.responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
