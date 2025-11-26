@@ -28,6 +28,18 @@ class User extends Authenticatable
     ];
 
     /**
+     * The attributes with default values.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'points_balance' => 10000,
+        'is_admin' => false,
+        'total_contests_entered' => 0,
+        'total_winnings' => 0,
+    ];
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>
