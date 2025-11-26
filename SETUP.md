@@ -1,4 +1,4 @@
-# 🏀 NBA Fantasy Bet - Complete Setup Guide
+# NBA Fantasy Bet - Complete Setup Guide
 
 **Project**: NBA Fantasy Bet
 **Author**: Mihai Landreev

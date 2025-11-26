@@ -6,6 +6,7 @@ use App\Http\Controllers\SimulationController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\RosterController;
 use App\Http\Controllers\GameController;
+use App\Http\Controllers\LeaderboardController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -33,6 +34,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/contests/{id}', [ContestController::class, 'show'])->name('contests.show');
     Route::get('/contest-history', [ContestController::class, 'history'])->name('contests.history');
     Route::get('/games', [ContestController::class, 'games'])->name('games.index');
+
+    // Leaderboards
+    Route::get('/leaderboards', [LeaderboardController::class, 'index'])->name('leaderboards.index');
 
     // Games
     Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');

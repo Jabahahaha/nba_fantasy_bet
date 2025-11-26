@@ -24,6 +24,9 @@
                     <x-breeze.nav-link :href="route('contests.history')" :active="request()->routeIs('contests.history')">
                         {{ __('History') }}
                     </x-breeze.nav-link>
+                    <x-breeze.nav-link :href="route('leaderboards.index')" :active="request()->routeIs('leaderboards.*')">
+                        {{ __('Leaderboards') }}
+                    </x-breeze.nav-link>
                     @if(Auth::user()->is_admin)
                         <x-breeze.nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')" class="text-orange-600">
                             {{ __('Admin Panel') }}
@@ -95,6 +98,9 @@
             </x-breeze.responsive-nav-link>
             <x-breeze.responsive-nav-link :href="route('contests.history')" :active="request()->routeIs('contests.history')">
                 {{ __('History') }}
+            </x-breeze.responsive-nav-link>
+            <x-breeze.responsive-nav-link :href="route('leaderboards.index')" :active="request()->routeIs('leaderboards.*')">
+                {{ __('Leaderboards') }}
             </x-breeze.responsive-nav-link>
             @if(Auth::user()->is_admin)
                 <x-breeze.responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">

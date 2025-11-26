@@ -1,4 +1,4 @@
-# 🏀 NBA Fantasy Bet
+# NBA Fantasy Bet
 
 A complete daily fantasy sports platform for NBA games. Build lineups, compete in contests, and win prizes!
 
