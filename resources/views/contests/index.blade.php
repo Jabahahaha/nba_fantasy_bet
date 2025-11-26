@@ -100,17 +100,32 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        @if($contest->isOpen())
-                                            <a href="{{ route('lineups.create', $contest->id) }}" class="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">
-                                                Join
-                                            </a>
-                                        @elseif($contest->isLocked())
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                                                🔒 Locked
-                                            </span>
+                                        @auth
+                                            @php
+                                                $userEntries = $contest->getUserEntryCount(Auth::id());
+                                                $remainingEntries = $contest->getUserRemainingEntries(Auth::id());
+                                            @endphp
+                                            @if($contest->isOpen() && $remainingEntries > 0)
+                                                <a href="{{ route('lineups.create', $contest->id) }}" class="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">
+                                                    Enter
+                                                    @if($userEntries > 0)
+                                                        <span class="text-xs">({{ $userEntries }}/{{ $contest->max_entries_per_user }})</span>
+                                                    @endif
+                                                </a>
+                                            @elseif($contest->isOpen() && $remainingEntries == 0)
+                                                <span class="text-sm text-gray-500">Max entries ({{ $userEntries }})</span>
+                                            @elseif($contest->isLocked())
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                                                    🔒 Locked
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">Full</span>
+                                            @endif
                                         @else
-                                            <span class="text-gray-400">Full</span>
-                                        @endif
+                                            <a href="{{ route('login') }}" class="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">
+                                                Login to Join
+                                            </a>
+                                        @endauth
                                     </td>
                                 </tr>
                             @empty

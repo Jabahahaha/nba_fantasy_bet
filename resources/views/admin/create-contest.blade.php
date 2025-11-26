@@ -33,9 +33,16 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Max Entries</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Max Total Entries</label>
                                 <input type="number" name="max_entries" required min="2" class="w-full rounded-md border-gray-300" placeholder="100">
+                                <p class="text-xs text-gray-500 mt-1">Total number of entries allowed in contest</p>
                             </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Max Entries Per User</label>
+                            <input type="number" name="max_entries_per_user" required min="1" max="150" value="150" class="w-full rounded-md border-gray-300" placeholder="150">
+                            <p class="text-xs text-gray-500 mt-1">Maximum number of lineups each user can enter (1-150)</p>
                         </div>
 
                         <div class="grid md:grid-cols-2 gap-4 mb-4">

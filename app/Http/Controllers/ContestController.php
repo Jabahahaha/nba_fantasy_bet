@@ -54,6 +54,7 @@ class ContestController extends Controller
             'contest_type' => 'required|in:50-50,GPP,H2H',
             'entry_fee' => 'required|integer|min:1',
             'max_entries' => 'required|integer|min:2',
+            'max_entries_per_user' => 'required|integer|min:1|max:150',
             'contest_date' => 'required|date',
             'lock_time' => 'required|date',
         ]);

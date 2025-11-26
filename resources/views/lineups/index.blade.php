@@ -27,13 +27,30 @@
                         <div class="border-b pb-4 mb-4">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <h3 class="font-bold text-lg">{{ $lineup->lineup_name }}</h3>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-bold text-lg">{{ $lineup->lineup_name ?? 'Lineup #' . $lineup->id }}</h3>
+                                        @php
+                                            $userEntriesForContest = $lineup->contest->getUserEntryCount(Auth::id());
+                                        @endphp
+                                        @if($userEntriesForContest > 1)
+                                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                                                {{ $userEntriesForContest }} entries
+                                            </span>
+                                        @endif
+                                    </div>
                                     <p class="text-sm text-gray-600">{{ $lineup->contest->name }}</p>
                                     <p class="text-xs text-gray-500">Entry Fee: {{ number_format($lineup->contest->entry_fee) }} pts</p>
                                 </div>
-                                <a href="{{ route('lineups.show', $lineup->id) }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
-                                    View
-                                </a>
+                                <div class="flex gap-2">
+                                    @if(!$lineup->contest->isLocked())
+                                        <a href="{{ route('lineups.edit', $lineup->id) }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-700">
+                                            Edit
+                                        </a>
+                                    @endif
+                                    <a href="{{ route('lineups.show', $lineup->id) }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
+                                        View
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     @empty

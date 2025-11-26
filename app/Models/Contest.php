@@ -14,6 +14,7 @@ class Contest extends Model
         'name',
         'entry_fee',
         'max_entries',
+        'max_entries_per_user',
         'current_entries',
         'prize_pool',
         'contest_date',
@@ -195,5 +196,29 @@ class Contest extends Model
         // Mark contest as completed
         $this->status = 'completed';
         $this->save();
+    }
+
+    /**
+     * Get the number of entries a user has in this contest
+     */
+    public function getUserEntryCount($userId): int
+    {
+        return $this->lineups()->where('user_id', $userId)->count();
+    }
+
+    /**
+     * Check if user can enter more lineups in this contest
+     */
+    public function canUserEnter($userId): bool
+    {
+        return $this->getUserEntryCount($userId) < $this->max_entries_per_user;
+    }
+
+    /**
+     * Get remaining entries for a user
+     */
+    public function getUserRemainingEntries($userId): int
+    {
+        return max(0, $this->max_entries_per_user - $this->getUserEntryCount($userId));
     }
 }

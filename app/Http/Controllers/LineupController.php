@@ -68,6 +68,11 @@ class LineupController extends Controller
             return back()->with('error', 'Insufficient points balance.');
         }
 
+        // Check if user has reached max entries for this contest
+        if (!$contest->canUserEnter($user->id)) {
+            return back()->with('error', "You have reached the maximum number of entries ({$contest->max_entries_per_user}) for this contest.");
+        }
+
         // Get selected players
         $playerIds = collect($validated['players'])->pluck('player_id')->toArray();
         $players = Player::whereIn('id', $playerIds)->get()->keyBy('id');
@@ -110,15 +115,6 @@ class LineupController extends Controller
                     return back()->with('error', 'F slot must contain a forward (SF or PF).');
                 }
             }
-        }
-
-        // Check for duplicate entry (optional - for MVP feature)
-        $existingLineup = Lineup::where('user_id', $user->id)
-            ->where('contest_id', $contest->id)
-            ->first();
-
-        if ($existingLineup) {
-            return back()->with('error', 'You have already entered this contest.');
         }
 
         // Create lineup in transaction

@@ -41,6 +41,36 @@
                         </div>
                     </div>
 
+                    <!-- User Entry Info -->
+                    @auth
+                        @php
+                            $userEntryCount = $contest->getUserEntryCount(Auth::id());
+                            $remainingEntries = $contest->getUserRemainingEntries(Auth::id());
+                        @endphp
+                        @if($userEntryCount > 0 || !$contest->isLocked())
+                            <div class="border-t border-gray-200 pt-4 mt-4">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-sm text-gray-500">Your Entries</p>
+                                        <p class="text-lg font-bold">{{ $userEntryCount }} / {{ $contest->max_entries_per_user }}</p>
+                                    </div>
+                                    @if(!$contest->isLocked() && $remainingEntries > 0)
+                                        <div class="text-right">
+                                            <a href="{{ route('lineups.create', $contest->id) }}"
+                                               class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-700 text-white font-bold rounded">
+                                                Enter Contest ({{ $remainingEntries }} left)
+                                            </a>
+                                        </div>
+                                    @elseif($userEntryCount >= $contest->max_entries_per_user)
+                                        <div class="text-right">
+                                            <span class="text-sm text-gray-500">Maximum entries reached</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    @endauth
+
                     <!-- Countdown Timer -->
                     @if(!$contest->isLocked())
                         <div class="border-t border-gray-200 pt-4 mt-4">
