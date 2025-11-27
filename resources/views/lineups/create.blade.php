@@ -1,32 +1,65 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Build Lineup - {{ $contest->name }}
-        </h2>
+        <div class="flex items-center justify-between">
+            <h2 class="font-black text-2xl text-white">
+                Build Lineup - {{ $contest->name }}
+            </h2>
+            <a href="{{ route('contests.show', $contest->id) }}" class="text-green-400 hover:text-green-300 text-sm font-bold">
+                ← Back to Contest
+            </a>
+        </div>
     </x-slot>
 
-    <div class="py-12" x-data="lineupBuilder()">
+    <div class="py-8" x-data="lineupBuilder()">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Error Messages -->
             <x-form-errors />
 
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- Player List -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <h3 class="text-lg font-bold mb-4">Available Players ({{ count($players) }})</h3>
+            <!-- Salary Cap Bar -->
+            <div class="mb-6 bg-gray-800 border border-gray-700 rounded-xl p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <span class="text-sm text-gray-400">Salary Remaining</span>
+                        <p class="text-3xl font-black" :class="totalSalary > 50000 ? 'text-red-400' : 'accent-green'">
+                            $<span x-text="(50000 - totalSalary).toLocaleString()"></span>
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-sm text-gray-400">Players Selected</span>
+                        <p class="text-3xl font-black text-white">
+                            <span x-text="slots.filter(s => s.player).length"></span><span class="text-gray-500">/8</span>
+                        </p>
+                    </div>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div class="h-full transition-all duration-300"
+                         :class="totalSalary > 50000 ? 'bg-red-500' : 'bg-accent-green'"
+                         :style="`width: ${Math.min((totalSalary / 50000) * 100, 100)}%`">
+                    </div>
+                </div>
+                <div class="flex justify-between mt-2 text-xs text-gray-500">
+                    <span>$0</span>
+                    <span>$50,000</span>
+                </div>
+            </div>
 
-                        <!-- Search and Filters -->
-                        <div class="mb-4 space-y-2">
+            <div class="grid lg:grid-cols-5 gap-6">
+                <!-- Player Pool (Left Side - 3 columns) -->
+                <div class="lg:col-span-3">
+                    <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+                        <div class="p-6 border-b border-gray-700">
+                            <h3 class="text-xl font-black text-white mb-4">Player Pool</h3>
+
                             <!-- Search Bar -->
                             <input type="text"
                                    x-model="searchQuery"
-                                   placeholder="Search players by name..."
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                   placeholder="🔍 Search players..."
+                                   class="w-full mb-4 bg-gray-900 border-gray-600 text-white placeholder-gray-500 rounded-lg focus:border-green-500 focus:ring-green-500">
 
-                            <!-- Filters Row -->
-                            <div class="flex gap-2">
-                                <select x-model="filterPosition" class="flex-1 rounded-md border-gray-300 text-sm">
+                            <!-- Filters -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                <select x-model="filterPosition" class="bg-gray-900 border-gray-600 text-white text-sm rounded-lg focus:border-green-500">
                                     <option value="">All Positions</option>
                                     <option value="PG">PG</option>
                                     <option value="SG">SG</option>
@@ -35,7 +68,7 @@
                                     <option value="C">C</option>
                                 </select>
 
-                                <select x-model="filterTeam" class="flex-1 rounded-md border-gray-300 text-sm">
+                                <select x-model="filterTeam" class="bg-gray-900 border-gray-600 text-white text-sm rounded-lg focus:border-green-500">
                                     <option value="">All Teams</option>
                                     @php
                                         $teams = $players->pluck('team')->unique()->sort()->values();
@@ -45,7 +78,7 @@
                                     @endforeach
                                 </select>
 
-                                <select x-model="filterSalary" class="flex-1 rounded-md border-gray-300 text-sm">
+                                <select x-model="filterSalary" class="bg-gray-900 border-gray-600 text-white text-sm rounded-lg focus:border-green-500">
                                     <option value="">All Salaries</option>
                                     <option value="10000+">$10k+</option>
                                     <option value="8000-10000">$8k-$10k</option>
@@ -53,43 +86,38 @@
                                     <option value="4000-6000">$4k-$6k</option>
                                     <option value="0-4000">Under $4k</option>
                                 </select>
-                            </div>
 
-                            <!-- Sort Options -->
-                            <div class="flex gap-2">
-                                <select x-model="sortBy" class="flex-1 rounded-md border-gray-300 text-sm">
-                                    <option value="salary-desc">Salary (High-Low)</option>
-                                    <option value="salary-asc">Salary (Low-High)</option>
-                                    <option value="ppg-desc">PPG (High-Low)</option>
-                                    <option value="name-asc">Name (A-Z)</option>
+                                <select x-model="sortBy" class="bg-gray-900 border-gray-600 text-white text-sm rounded-lg focus:border-green-500">
+                                    <option value="salary-desc">$ High-Low</option>
+                                    <option value="salary-asc">$ Low-High</option>
+                                    <option value="ppg-desc">PPG High-Low</option>
+                                    <option value="name-asc">Name A-Z</option>
                                 </select>
                             </div>
                         </div>
 
                         <!-- Player List -->
-                        <div class="space-y-2 max-h-[600px] overflow-y-auto">
+                        <div class="p-4 space-y-2 max-h-[700px] overflow-y-auto">
                             @foreach($players as $player)
-                                <div x-show="filterPlayer({{ $player->id }}, '{{ $player->name }}', '{{ $player->position }}', '{{ $player->team }}', {{ $player->salary }})"
-                                     class="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition"
-                                     @click="addPlayer({{ $player->id }}, '{{ $player->name }}', '{{ $player->position }}', {{ $player->salary }}, '{{ $player->team }}', {{ $player->ppg }}, {{ $player->rpg }}, {{ $player->apg }}, {{ $player->spg }}, {{ $player->bpg }})">
-                                    <div class="flex justify-between items-start">
+                                <div x-show="filterPlayer({{ $player->id }}, '{{ addslashes($player->name) }}', '{{ $player->position }}', '{{ $player->team }}', {{ $player->salary }})"
+                                     class="bg-gray-900 border border-gray-700 rounded-lg p-4 hover:border-green-500 cursor-pointer transition group"
+                                     @click="addPlayer({{ $player->id }}, '{{ addslashes($player->name) }}', '{{ $player->position }}', {{ $player->salary }}, '{{ $player->team }}', {{ $player->ppg }})">
+                                    <div class="flex justify-between items-center">
                                         <div class="flex-1">
-                                            <div class="flex items-center gap-2">
-                                                <p class="font-bold">{{ $player->name }}</p>
-                                                <span class="text-xs bg-gray-100 px-2 py-0.5 rounded">{{ $player->position }}</span>
-                                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">{{ $player->team }}</span>
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span class="font-black text-white text-lg group-hover:text-green-400 transition">{{ $player->name }}</span>
+                                                <span class="text-xs font-bold px-2 py-1 bg-blue-500/10 text-blue-400 rounded">{{ $player->position }}</span>
+                                                <span class="text-xs font-semibold px-2 py-1 bg-gray-800 text-gray-300 rounded">{{ $player->team }}</span>
                                             </div>
-                                            <div class="mt-1 flex gap-3 text-xs text-gray-600">
-                                                <span title="Points Per Game"><strong>{{ number_format($player->ppg, 1) }}</strong> PPG</span>
-                                                <span title="Rebounds Per Game"><strong>{{ number_format($player->rpg, 1) }}</strong> RPG</span>
-                                                <span title="Assists Per Game"><strong>{{ number_format($player->apg, 1) }}</strong> APG</span>
-                                                @if($player->spg > 0 || $player->bpg > 0)
-                                                    <span class="text-green-600" title="Steals/Blocks"><strong>{{ number_format($player->spg, 1) }}</strong> S / <strong>{{ number_format($player->bpg, 1) }}</strong> B</span>
-                                                @endif
+                                            <div class="flex gap-4 text-xs text-gray-400">
+                                                <span><strong class="text-white">{{ number_format($player->ppg, 1) }}</strong> PPG</span>
+                                                <span><strong class="text-white">{{ number_format($player->rpg, 1) }}</strong> RPG</span>
+                                                <span><strong class="text-white">{{ number_format($player->apg, 1) }}</strong> APG</span>
+                                                <span class="text-green-400"><strong>{{ number_format($player->spg, 1) }}</strong>S <strong>{{ number_format($player->bpg, 1) }}</strong>B</span>
                                             </div>
                                         </div>
-                                        <div class="text-right ml-3">
-                                            <p class="font-bold text-lg">${{ number_format($player->salary) }}</p>
+                                        <div class="text-right ml-4">
+                                            <p class="font-black text-white text-xl">${{ number_format($player->salary) }}</p>
                                             <p class="text-xs text-gray-500">{{ number_format($player->mpg, 1) }} MPG</p>
                                         </div>
                                     </div>
@@ -99,128 +127,109 @@
                     </div>
                 </div>
 
-                <!-- Lineup Builder -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg sticky top-6">
-                    <div class="p-6">
-                        <h3 class="text-lg font-bold mb-4">Your Lineup</h3>
-
-                        <!-- Salary Cap -->
-                        <div class="mb-6 p-4 bg-gray-100 rounded-lg">
-                            <div class="flex justify-between mb-2">
-                                <span class="font-bold">Remaining Salary:</span>
-                                <span class="font-bold" :class="remaining < 0 ? 'text-red-600' : 'text-green-600'">
-                                    $<span x-text="remaining.toLocaleString()"></span>
-                                </span>
-                            </div>
-                            <div class="w-full bg-gray-300 rounded-full h-2">
-                                <div class="bg-blue-600 h-2 rounded-full transition-all" :style="`width: ${(totalSalary / 50000) * 100}%`"></div>
-                            </div>
+                <!-- Lineup (Right Side - 2 columns) -->
+                <div class="lg:col-span-2">
+                    <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden sticky top-6">
+                        <div class="p-6 border-b border-gray-700">
+                            <h3 class="text-xl font-black text-white">Your Lineup</h3>
                         </div>
 
-                        <!-- Lineup Slots -->
-                        <div class="space-y-2 mb-6">
+                        <!-- Roster Slots -->
+                        <div class="p-4 space-y-2">
                             <template x-for="(slot, index) in slots" :key="index">
-                                <div class="border rounded-lg p-3" :class="slot.player ? 'bg-blue-50 border-blue-300' : 'bg-gray-50'">
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <p class="text-xs font-bold text-gray-500" x-text="slot.position"></p>
-                                            <p class="font-bold" x-text="slot.player ? slot.player.name : 'Empty'"></p>
-                                            <p class="text-sm text-gray-600" x-show="slot.player" x-text="slot.player ? `${slot.player.position} - ${slot.player.team}` : ''"></p>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="font-bold" x-show="slot.player" x-text="slot.player ? `$${slot.player.salary.toLocaleString()}` : ''"></p>
-                                            <button x-show="slot.player" @click="removePlayer(index)" class="text-red-600 text-sm hover:text-red-800">Remove</button>
-                                        </div>
+                                <div class="bg-gray-900 border border-gray-700 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-black text-gray-400" x-text="slot.position"></span>
+                                        <template x-if="slot.player">
+                                            <button @click="removePlayer(index)" class="text-red-400 hover:text-red-300 text-xs font-bold">
+                                                REMOVE
+                                            </button>
+                                        </template>
                                     </div>
+
+                                    <template x-if="!slot.player">
+                                        <div class="text-center py-6 border-2 border-dashed border-gray-700 rounded-lg">
+                                            <svg class="w-8 h-8 mx-auto text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                            </svg>
+                                            <p class="text-xs text-gray-500 font-semibold">Select Player</p>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="slot.player">
+                                        <div>
+                                            <div class="flex justify-between items-start">
+                                                <div class="flex-1">
+                                                    <p class="font-black text-white" x-text="slot.player.name"></p>
+                                                    <div class="flex items-center gap-2 mt-1">
+                                                        <span class="text-xs font-bold px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded" x-text="slot.player.position"></span>
+                                                        <span class="text-xs font-semibold text-gray-400" x-text="slot.player.team"></span>
+                                                    </div>
+                                                    <p class="text-xs text-gray-400 mt-2">
+                                                        <span x-text="slot.player.ppg.toFixed(1)"></span> PPG
+                                                    </p>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="font-black text-white text-lg">$<span x-text="slot.player.salary.toLocaleString()"></span></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
                             </template>
                         </div>
 
                         <!-- Submit Form -->
-                        <form method="POST" action="{{ route('lineups.store') }}" @submit="prepareSubmit">
-                            @csrf
-                            <input type="hidden" name="contest_id" value="{{ $contest->id }}">
-                            <input type="hidden" name="lineup_name" x-model="lineupName">
-                            <template x-for="(slot, index) in slots" :key="index">
-                                <div x-show="slot.player">
-                                    <input type="hidden" :name="`players[${index}][player_id]`" :value="slot.player ? slot.player.id : ''">
-                                    <input type="hidden" :name="`players[${index}][position_slot]`" :value="slot.position">
-                                </div>
-                            </template>
+                        <div class="p-6 border-t border-gray-700">
+                            <form method="POST" action="{{ route('lineups.store') }}" @submit="prepareSubmit($event)">
+                                @csrf
+                                <input type="hidden" name="contest_id" value="{{ $contest->id }}">
 
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Lineup Name (optional)</label>
-                                <input type="text" x-model="lineupName" class="w-full rounded-md border-gray-300" placeholder="My Lineup">
-                            </div>
+                                <input type="text"
+                                       name="lineup_name"
+                                       placeholder="Lineup Name (Optional)"
+                                       class="w-full mb-4 bg-gray-900 border-gray-600 text-white rounded-lg focus:border-green-500 focus:ring-green-500">
 
-                            <button type="submit"
-                                    :disabled="!isValid()"
-                                    :class="isValid() ? 'bg-green-500 hover:bg-green-700' : 'bg-gray-300 cursor-not-allowed'"
-                                    class="w-full text-white px-4 py-3 rounded-lg font-bold">
-                                Enter Contest
-                            </button>
-                        </form>
+                                <template x-for="(slot, index) in slots">
+                                    <input type="hidden" :name="'players[' + index + '][player_id]'" :value="slot.player ? slot.player.id : ''">
+                                    <input type="hidden" :name="'players[' + index + '][position_slot]'" :value="slot.position">
+                                </template>
+
+                                <button type="submit"
+                                        :disabled="!isValid()"
+                                        :class="isValid() ? 'bg-accent-green hover:bg-green-600 text-black cursor-pointer' : 'bg-gray-700 text-gray-500 cursor-not-allowed'"
+                                        class="w-full py-4 rounded-xl font-black text-lg transition shadow-lg">
+                                    <span x-show="isValid()">SUBMIT LINEUP</span>
+                                    <span x-show="!isValid()">COMPLETE LINEUP TO SUBMIT</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
     <script>
         function lineupBuilder() {
             return {
+                slots: [
+                    {position: 'PG', player: null},
+                    {position: 'SG', player: null},
+                    {position: 'SF', player: null},
+                    {position: 'PF', player: null},
+                    {position: 'C', player: null},
+                    {position: 'G', player: null},
+                    {position: 'F', player: null},
+                    {position: 'UTIL', player: null}
+                ],
+                totalSalary: 0,
                 filterPosition: '',
                 filterTeam: '',
                 filterSalary: '',
                 sortBy: 'salary-desc',
                 searchQuery: '',
-                lineupName: '',
-                slots: [
-                    { position: 'PG', player: null },
-                    { position: 'SG', player: null },
-                    { position: 'SF', player: null },
-                    { position: 'PF', player: null },
-                    { position: 'C', player: null },
-                    { position: 'G', player: null },
-                    { position: 'F', player: null },
-                    { position: 'UTIL', player: null }
-                ],
-                totalSalary: 0,
-                remaining: 50000,
-
-                filterPlayer(id, name, position, team, salary) {
-                    // Check search query
-                    if (this.searchQuery && !name.toLowerCase().includes(this.searchQuery.toLowerCase())) {
-                        return false;
-                    }
-
-                    // Check position filter
-                    if (this.filterPosition && position !== this.filterPosition) {
-                        return false;
-                    }
-
-                    // Check team filter
-                    if (this.filterTeam && team !== this.filterTeam) {
-                        return false;
-                    }
-
-                    // Check salary filter
-                    if (this.filterSalary) {
-                        if (this.filterSalary === '10000+' && salary < 10000) {
-                            return false;
-                        } else if (this.filterSalary === '8000-10000' && (salary < 8000 || salary > 10000)) {
-                            return false;
-                        } else if (this.filterSalary === '6000-8000' && (salary < 6000 || salary > 8000)) {
-                            return false;
-                        } else if (this.filterSalary === '4000-6000' && (salary < 4000 || salary > 6000)) {
-                            return false;
-                        } else if (this.filterSalary === '0-4000' && salary >= 4000) {
-                            return false;
-                        }
-                    }
-
-                    return true;
-                },
 
                 addPlayer(id, name, position, salary, team, ppg) {
                     // Check if player already added
@@ -266,10 +275,6 @@
                     this.updateTotals();
                 },
 
-                showError(message) {
-                    alert(message);
-                },
-
                 removePlayer(index) {
                     this.slots[index].player = null;
                     this.updateTotals();
@@ -279,13 +284,38 @@
                     this.totalSalary = this.slots.reduce((sum, slot) => {
                         return sum + (slot.player ? slot.player.salary : 0);
                     }, 0);
-                    this.remaining = 50000 - this.totalSalary;
                 },
 
                 isValid() {
-                    const allFilled = this.slots.every(slot => slot.player !== null);
-                    const underCap = this.totalSalary <= 50000;
-                    return allFilled && underCap;
+                    return this.slots.every(slot => slot.player !== null) && this.totalSalary <= 50000;
+                },
+
+                filterPlayer(id, name, position, team, salary) {
+                    // Check search query
+                    if (this.searchQuery && !name.toLowerCase().includes(this.searchQuery.toLowerCase())) {
+                        return false;
+                    }
+
+                    // Check position filter
+                    if (this.filterPosition && position !== this.filterPosition) {
+                        return false;
+                    }
+
+                    // Check team filter
+                    if (this.filterTeam && team !== this.filterTeam) {
+                        return false;
+                    }
+
+                    // Check salary filter
+                    if (this.filterSalary) {
+                        if (this.filterSalary === '10000+' && salary < 10000) return false;
+                        if (this.filterSalary === '8000-10000' && (salary < 8000 || salary >= 10000)) return false;
+                        if (this.filterSalary === '6000-8000' && (salary < 6000 || salary >= 8000)) return false;
+                        if (this.filterSalary === '4000-6000' && (salary < 4000 || salary >= 6000)) return false;
+                        if (this.filterSalary === '0-4000' && salary >= 4000) return false;
+                    }
+
+                    return true;
                 },
 
                 prepareSubmit(e) {
@@ -306,6 +336,10 @@
 
                         this.showError('Please complete your lineup before submitting.');
                     }
+                },
+
+                showError(message) {
+                    alert(message);
                 }
             }
         }
