@@ -57,6 +57,25 @@ class ContestController extends Controller
             'max_entries_per_user' => 'required|integer|min:1|max:150',
             'contest_date' => 'required|date',
             'lock_time' => 'required|date',
+        ], [
+            'name.required' => 'Contest name is required.',
+            'name.max' => 'Contest name cannot exceed 255 characters.',
+            'contest_type.required' => 'Please select a contest type.',
+            'contest_type.in' => 'Invalid contest type selected. Must be 50-50, GPP, or H2H.',
+            'entry_fee.required' => 'Entry fee is required.',
+            'entry_fee.integer' => 'Entry fee must be a whole number.',
+            'entry_fee.min' => 'Entry fee must be at least 1 point.',
+            'max_entries.required' => 'Maximum entries is required.',
+            'max_entries.integer' => 'Maximum entries must be a whole number.',
+            'max_entries.min' => 'Contest must allow at least 2 entries.',
+            'max_entries_per_user.required' => 'Maximum entries per user is required.',
+            'max_entries_per_user.integer' => 'Maximum entries per user must be a whole number.',
+            'max_entries_per_user.min' => 'Users must be allowed at least 1 entry.',
+            'max_entries_per_user.max' => 'Maximum entries per user cannot exceed 150.',
+            'contest_date.required' => 'Contest date is required.',
+            'contest_date.date' => 'Contest date must be a valid date.',
+            'lock_time.required' => 'Lock time is required.',
+            'lock_time.date' => 'Lock time must be a valid date and time.',
         ]);
 
         // Calculate prize pool (assuming 10% rake)

@@ -53,24 +53,35 @@ class LineupController extends Controller
             'players' => 'required|array|size:8',
             'players.*.player_id' => 'required|exists:players,id',
             'players.*.position_slot' => 'required|in:PG,SG,SF,PF,C,G,F,UTIL',
+        ], [
+            'contest_id.required' => 'Contest selection is required.',
+            'contest_id.exists' => 'The selected contest does not exist.',
+            'lineup_name.max' => 'Lineup name cannot exceed 255 characters.',
+            'players.required' => 'You must select players for your lineup.',
+            'players.size' => 'Your lineup must contain exactly 8 players.',
+            'players.*.player_id.required' => 'All position slots must be filled.',
+            'players.*.player_id.exists' => 'One or more selected players are invalid.',
+            'players.*.position_slot.required' => 'All positions must be assigned.',
+            'players.*.position_slot.in' => 'Invalid position slot selected.',
         ]);
 
         $contest = Contest::findOrFail($validated['contest_id']);
 
         // Validation checks
         if (!$contest->isOpen()) {
-            return back()->with('error', 'Contest is no longer open.');
+            return back()->with('error', 'This contest is no longer accepting entries. It may be locked or already started.');
         }
 
         $user = Auth::user();
 
         if ($user->points_balance < $contest->entry_fee) {
-            return back()->with('error', 'Insufficient points balance.');
+            $needed = $contest->entry_fee - $user->points_balance;
+            return back()->with('error', "Insufficient points balance. You need {$needed} more points to enter this contest (Entry fee: {$contest->entry_fee} points, Your balance: {$user->points_balance} points).");
         }
 
         // Check if user has reached max entries for this contest
         if (!$contest->canUserEnter($user->id)) {
-            return back()->with('error', "You have reached the maximum number of entries ({$contest->max_entries_per_user}) for this contest.");
+            return back()->with('error', "You have reached the maximum number of entries ({$contest->max_entries_per_user}) for this contest. Cannot submit additional lineups.");
         }
 
         // Get selected players
@@ -84,7 +95,8 @@ class LineupController extends Controller
         }
 
         if ($totalSalary > 50000) {
-            return back()->with('error', 'Total salary exceeds $50,000 cap.');
+            $over = $totalSalary - 50000;
+            return back()->with('error', "Total salary of \${$totalSalary} exceeds the \$50,000 salary cap by \${$over}. Please adjust your lineup.");
         }
 
         // Validate position requirements
@@ -93,7 +105,7 @@ class LineupController extends Controller
 
         foreach ($requiredSlots as $required) {
             if (!in_array($required, $positionSlots)) {
-                return back()->with('error', "Missing required position: {$required}");
+                return back()->with('error', "Your lineup is missing the required {$required} position. Please fill all 8 roster spots.");
             }
         }
 
@@ -102,7 +114,7 @@ class LineupController extends Controller
             if ($playerData['position_slot'] === 'G') {
                 $player = $players[$playerData['player_id']];
                 if (!in_array($player->position, ['PG', 'SG'])) {
-                    return back()->with('error', 'G slot must contain a guard (PG or SG).');
+                    return back()->with('error', "The G (Guard) slot must contain a Point Guard (PG) or Shooting Guard (SG). {$player->name} is a {$player->position}.");
                 }
             }
         }
@@ -112,7 +124,7 @@ class LineupController extends Controller
             if ($playerData['position_slot'] === 'F') {
                 $player = $players[$playerData['player_id']];
                 if (!in_array($player->position, ['SF', 'PF'])) {
-                    return back()->with('error', 'F slot must contain a forward (SF or PF).');
+                    return back()->with('error', "The F (Forward) slot must contain a Small Forward (SF) or Power Forward (PF). {$player->name} is a {$player->position}.");
                 }
             }
         }
@@ -270,7 +282,7 @@ class LineupController extends Controller
 
         // Check if contest is still open
         if ($lineup->contest->isLocked()) {
-            return back()->with('error', 'Contest is locked. Cannot edit lineup.');
+            return back()->with('error', 'This contest is locked and lineups can no longer be edited. The contest has already started or lock time has passed.');
         }
 
         $validated = $request->validate([
@@ -278,6 +290,14 @@ class LineupController extends Controller
             'players' => 'required|array|size:8',
             'players.*.player_id' => 'required|exists:players,id',
             'players.*.position_slot' => 'required|in:PG,SG,SF,PF,C,G,F,UTIL',
+        ], [
+            'lineup_name.max' => 'Lineup name cannot exceed 255 characters.',
+            'players.required' => 'You must select players for your lineup.',
+            'players.size' => 'Your lineup must contain exactly 8 players.',
+            'players.*.player_id.required' => 'All position slots must be filled.',
+            'players.*.player_id.exists' => 'One or more selected players are invalid.',
+            'players.*.position_slot.required' => 'All positions must be assigned.',
+            'players.*.position_slot.in' => 'Invalid position slot selected.',
         ]);
 
         // Get selected players
@@ -291,7 +311,8 @@ class LineupController extends Controller
         }
 
         if ($totalSalary > 50000) {
-            return back()->with('error', 'Total salary exceeds $50,000 cap.');
+            $over = $totalSalary - 50000;
+            return back()->with('error', "Total salary of \${$totalSalary} exceeds the \$50,000 salary cap by \${$over}. Please adjust your lineup.");
         }
 
         // Validate position requirements
@@ -300,7 +321,7 @@ class LineupController extends Controller
 
         foreach ($requiredSlots as $required) {
             if (!in_array($required, $positionSlots)) {
-                return back()->with('error', "Missing required position: {$required}");
+                return back()->with('error', "Your lineup is missing the required {$required} position. Please fill all 8 roster spots.");
             }
         }
 
@@ -309,13 +330,13 @@ class LineupController extends Controller
             if ($playerData['position_slot'] === 'G') {
                 $player = $players[$playerData['player_id']];
                 if (!in_array($player->position, ['PG', 'SG'])) {
-                    return back()->with('error', 'G slot must contain a guard (PG or SG).');
+                    return back()->with('error', "The G (Guard) slot must contain a Point Guard (PG) or Shooting Guard (SG). {$player->name} is a {$player->position}.");
                 }
             }
             if ($playerData['position_slot'] === 'F') {
                 $player = $players[$playerData['player_id']];
                 if (!in_array($player->position, ['SF', 'PF'])) {
-                    return back()->with('error', 'F slot must contain a forward (SF or PF).');
+                    return back()->with('error', "The F (Forward) slot must contain a Small Forward (SF) or Power Forward (PF). {$player->name} is a {$player->position}.");
                 }
             }
         }

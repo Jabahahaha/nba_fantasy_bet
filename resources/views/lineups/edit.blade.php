@@ -7,6 +7,9 @@
 
     <div class="py-12" x-data="lineupBuilder()">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <!-- Error Messages -->
+            <x-form-errors />
+
             <div class="grid md:grid-cols-2 gap-6">
                 <!-- Player List -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -236,7 +239,14 @@
                 addPlayer(id, name, position, salary, team, ppg) {
                     // Check if player already added
                     if (this.slots.some(slot => slot.player && slot.player.id === id)) {
-                        alert('Player already in lineup!');
+                        this.showError(`${name} is already in your lineup!`);
+                        return;
+                    }
+
+                    // Check if adding this player would exceed salary cap
+                    if (this.totalSalary + salary > 50000) {
+                        const over = (this.totalSalary + salary) - 50000;
+                        this.showError(`Cannot add ${name}. This would exceed salary cap by $${over.toLocaleString()}.`);
                         return;
                     }
 
@@ -262,12 +272,16 @@
                     }
 
                     if (slotIndex === -1) {
-                        alert('No available slot for this player!');
+                        this.showError(`No available slot for ${name} (${position}). All compatible positions are filled.`);
                         return;
                     }
 
                     this.slots[slotIndex].player = { id, name, position, salary, team, ppg };
                     this.updateTotals();
+                },
+
+                showError(message) {
+                    alert(message);
                 },
 
                 removePlayer(index) {
@@ -291,7 +305,20 @@
                 prepareSubmit(e) {
                     if (!this.isValid()) {
                         e.preventDefault();
-                        alert('Please fill all slots and stay under salary cap!');
+
+                        const emptySlots = this.slots.filter(slot => !slot.player).map(slot => slot.position);
+                        if (emptySlots.length > 0) {
+                            this.showError(`Please fill all lineup slots. Missing: ${emptySlots.join(', ')}`);
+                            return;
+                        }
+
+                        if (this.totalSalary > 50000) {
+                            const over = this.totalSalary - 50000;
+                            this.showError(`Your lineup exceeds the salary cap by $${over.toLocaleString()}. Please remove or replace players.`);
+                            return;
+                        }
+
+                        this.showError('Please complete your lineup before submitting.');
                     }
                 }
             }
