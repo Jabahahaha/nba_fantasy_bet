@@ -21,11 +21,14 @@ class Contest extends Model
         'lock_time',
         'status',
         'contest_type',
+        'cancelled_at',
+        'cancellation_reason',
     ];
 
     protected $casts = [
         'contest_date' => 'date',
         'lock_time' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     /**
@@ -220,5 +223,79 @@ class Contest extends Model
     public function getUserRemainingEntries($userId): int
     {
         return max(0, $this->max_entries_per_user - $this->getUserEntryCount($userId));
+    }
+
+    /**
+     * Check if contest is cancelled
+     */
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled' || $this->cancelled_at !== null;
+    }
+
+    /**
+     * Check if contest can be cancelled
+     */
+    public function canBeCancelled(): bool
+    {
+        // Can only cancel upcoming or live contests, not completed or already cancelled
+        return in_array($this->status, ['upcoming', 'live']) && !$this->isCancelled();
+    }
+
+    /**
+     * Cancel the contest and refund all entry fees
+     */
+    public function cancel(string $reason = null): bool
+    {
+        if (!$this->canBeCancelled()) {
+            return false;
+        }
+
+        \DB::beginTransaction();
+
+        try {
+            // Get all lineups for this contest
+            $lineups = $this->lineups()->with('user')->get();
+
+            // Refund entry fees to all participants
+            foreach ($lineups as $lineup) {
+                $lineup->user->addPoints(
+                    $this->entry_fee,
+                    'refund',
+                    "Refund for cancelled contest: {$this->name}",
+                    $this->id
+                );
+            }
+
+            // Update contest status
+            $this->status = 'cancelled';
+            $this->cancelled_at = now();
+            $this->cancellation_reason = $reason;
+            $this->save();
+
+            \DB::commit();
+            return true;
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Contest cancellation failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Get total number of users affected by cancellation
+     */
+    public function getAffectedUsersCount(): int
+    {
+        return $this->lineups()->distinct('user_id')->count('user_id');
+    }
+
+    /**
+     * Get total amount to be refunded
+     */
+    public function getTotalRefundAmount(): int
+    {
+        return $this->current_entries * $this->entry_fee;
     }
 }

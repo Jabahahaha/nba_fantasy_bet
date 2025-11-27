@@ -7,6 +7,32 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <!-- Cancelled Contest Alert -->
+            @if($contest->isCancelled())
+                <div class="bg-red-50 border-l-4 border-red-500 p-6 mb-6 rounded-lg">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h3 class="text-lg font-semibold text-red-800 mb-2">Contest Cancelled</h3>
+                            <p class="text-red-700 mb-2">This contest has been cancelled. All entry fees have been refunded to participants.</p>
+                            @if($contest->cancellation_reason)
+                                <div class="mt-3 bg-white p-3 rounded border border-red-200">
+                                    <p class="text-sm font-semibold text-gray-700">Reason:</p>
+                                    <p class="text-sm text-gray-600">{{ $contest->cancellation_reason }}</p>
+                                </div>
+                            @endif
+                            @if($contest->cancelled_at)
+                                <p class="text-xs text-red-600 mt-2">Cancelled on {{ $contest->cancelled_at->format('M d, Y \a\t g:i A') }}</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Contest Info -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
@@ -72,12 +98,15 @@
                     @endauth
 
                     <!-- Countdown Timer -->
-                    @if(!$contest->isLocked())
+                    @php
+                        $secondsUntilLock = $contest->getSecondsUntilLock();
+                    @endphp
+                    @if($secondsUntilLock > 0 && $contest->status === 'upcoming')
                         <div class="border-t border-gray-200 pt-4 mt-4">
                             <div class="text-center">
                                 <p class="text-sm text-gray-500 mb-2">Contest Locks In</p>
                                 <div
-                                    x-data="countdown({{ $contest->getSecondsUntilLock() }})"
+                                    x-data="countdown({{ $secondsUntilLock }})"
                                     x-init="start()"
                                     class="text-3xl font-bold text-blue-600"
                                 >
@@ -102,11 +131,17 @@
             <script>
                 function countdown(seconds) {
                     return {
-                        remaining: seconds,
+                        remaining: Math.max(0, seconds), // Ensure we never start with negative
                         display: '',
                         interval: null,
 
                         start() {
+                            // If already locked, don't start countdown
+                            if (this.remaining <= 0) {
+                                this.display = 'LOCKED';
+                                return;
+                            }
+
                             this.updateDisplay();
                             this.interval = setInterval(() => {
                                 if (this.remaining > 0) {
@@ -115,13 +150,18 @@
                                 } else {
                                     clearInterval(this.interval);
                                     this.display = 'LOCKED';
-                                    // Reload page when contest locks
-                                    setTimeout(() => window.location.reload(), 1000);
+                                    // Reload page when contest locks to update UI
+                                    setTimeout(() => window.location.reload(), 2000);
                                 }
                             }, 1000);
                         },
 
                         updateDisplay() {
+                            if (this.remaining <= 0) {
+                                this.display = 'LOCKED';
+                                return;
+                            }
+
                             const days = Math.floor(this.remaining / 86400);
                             const hours = Math.floor((this.remaining % 86400) / 3600);
                             const minutes = Math.floor((this.remaining % 3600) / 60);

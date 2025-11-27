@@ -173,4 +173,37 @@ class ContestController extends Controller
             'avgFinish'
         ));
     }
+
+    /**
+     * Cancel a contest and refund all participants (admin only)
+     */
+    public function cancel(Request $request, $id)
+    {
+        $contest = Contest::findOrFail($id);
+
+        // Check if user is admin
+        if (!Auth::user()->is_admin) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Check if contest can be cancelled
+        if (!$contest->canBeCancelled()) {
+            return back()->with('error', 'This contest cannot be cancelled. It may already be completed or cancelled.');
+        }
+
+        // Get cancellation reason (optional, defaults to generic message)
+        $cancellationReason = $request->input('cancellation_reason', 'Contest cancelled by admin');
+
+        // Calculate refund information
+        $affectedUsers = $contest->getAffectedUsersCount();
+        $totalRefund = $contest->getTotalRefundAmount();
+
+        // Cancel the contest
+        if ($contest->cancel($cancellationReason)) {
+            return redirect()->route('admin.dashboard')
+                ->with('success', "Contest '{$contest->name}' has been cancelled. {$affectedUsers} users will be refunded a total of {$totalRefund} points.");
+        } else {
+            return back()->with('error', 'Failed to cancel contest. Please check the logs and try again.');
+        }
+    }
 }

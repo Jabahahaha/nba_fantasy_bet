@@ -181,7 +181,7 @@ class LineupController extends Controller
 
         $upcomingLineups = $user->lineups()
             ->whereHas('contest', function($q) {
-                $q->where('status', 'upcoming');
+                $q->where('status', 'upcoming')->whereNull('cancelled_at');
             })
             ->with('contest')
             ->latest()
@@ -189,7 +189,7 @@ class LineupController extends Controller
 
         $liveLineups = $user->lineups()
             ->whereHas('contest', function($q) {
-                $q->where('status', 'live');
+                $q->where('status', 'live')->whereNull('cancelled_at');
             })
             ->with('contest')
             ->latest()
@@ -197,13 +197,21 @@ class LineupController extends Controller
 
         $completedLineups = $user->lineups()
             ->whereHas('contest', function($q) {
-                $q->where('status', 'completed');
+                $q->where('status', 'completed')->whereNull('cancelled_at');
             })
             ->with('contest')
             ->latest()
             ->get();
 
-        return view('lineups.index', compact('upcomingLineups', 'liveLineups', 'completedLineups'));
+        $cancelledLineups = $user->lineups()
+            ->whereHas('contest', function($q) {
+                $q->where('status', 'cancelled')->orWhereNotNull('cancelled_at');
+            })
+            ->with('contest')
+            ->latest()
+            ->get();
+
+        return view('lineups.index', compact('upcomingLineups', 'liveLineups', 'completedLineups', 'cancelledLineups'));
     }
 
     /**

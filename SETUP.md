@@ -6,7 +6,7 @@
 
 ---
 
-## 📋 What You Need
+## What You Need
 
 - PHP 8.3+
 - Composer
@@ -16,7 +16,7 @@
 
 ---
 
-## 🚀 Setup From Zero
+## Setup From Zero
 
 ### Step 1: Clone & Install
 
@@ -111,7 +111,7 @@ npm run dev
 
 ---
 
-## 🎮 How to Use
+## How to Use
 
 ### For Users
 
@@ -140,7 +140,7 @@ npm run dev
 
 ---
 
-## 📊 Database Tables Created
+## Database Tables Created
 
 After migration, you'll have:
 - `users` - User accounts with points balance
@@ -154,7 +154,7 @@ After migration, you'll have:
 
 ---
 
-## 🎯 Contest Types
+## Contest Types
 
 **50/50 Contest**
 - Top 50% win
@@ -173,7 +173,7 @@ After migration, you'll have:
 
 ---
 
-## 🏆 Fantasy Scoring (DraftKings Format)
+## Fantasy Scoring (DraftKings Format)
 
 ```
 Points × 1.0
@@ -221,7 +221,7 @@ php artisan test
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 nba-fantasy-bet/
@@ -246,7 +246,7 @@ nba-fantasy-bet/
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Can't Access Admin Panel
 ```bash
@@ -280,7 +280,7 @@ npm run build
 
 ---
 
-## 📊 CSV Format Requirements
+## CSV Format Requirements
 
 ### Players CSV (nba_stats_cleaned.csv)
 ```csv
@@ -316,7 +316,7 @@ Fri Nov 17 2025,7:30p,LAL,GSW,Chase Center,
 
 ---
 
-## 🔐 Security Notes
+## Security Notes
 
 ### Before Production
 
@@ -350,7 +350,7 @@ Fri Nov 17 2025,7:30p,LAL,GSW,Chase Center,
 
 ---
 
-## ✅ Verification Checklist
+## Verification Checklist
 
 After setup, verify:
 - [ ] Can access homepage
@@ -369,7 +369,7 @@ After setup, verify:
 
 ---
 
-## 🎯 Quick Start Summary
+## Quick Start Summary
 
 ```bash
 # 1. Install
@@ -402,7 +402,7 @@ npm run build
 
 ---
 
-## 🏀 You're Ready!
+## You're Ready!
 
 Your NBA Fantasy Bet platform is now fully set up and ready to use!
 

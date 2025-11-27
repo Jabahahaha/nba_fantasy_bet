@@ -45,23 +45,35 @@
                                         <span class="px-2 py-1 text-xs rounded-full
                                             {{ $contest->status === 'upcoming' ? 'bg-blue-100 text-blue-800' : '' }}
                                             {{ $contest->status === 'live' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                            {{ $contest->status === 'completed' ? 'bg-green-100 text-green-800' : '' }}">
-                                            {{ $contest->status }}
+                                            {{ $contest->status === 'completed' ? 'bg-green-100 text-green-800' : '' }}
+                                            {{ $contest->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}">
+                                            {{ ucfirst($contest->status) }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $contest->current_entries }} / {{ $contest->max_entries }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $contest->contest_date->format('M d, Y') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @if($contest->status !== 'completed')
-                                            <form method="POST" action="{{ route('admin.contests.simulate', $contest->id) }}">
-                                                @csrf
-                                                <button type="submit" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-700">
-                                                    Simulate
-                                                </button>
-                                            </form>
-                                        @else
-                                            <a href="{{ route('contests.show', $contest->id) }}" class="text-blue-600 hover:text-blue-900">View Results</a>
-                                        @endif
+                                        <div class="flex gap-2">
+                                            @if($contest->status === 'cancelled')
+                                                <span class="text-gray-500 text-sm">Cancelled</span>
+                                            @elseif($contest->status === 'completed')
+                                                <a href="{{ route('contests.show', $contest->id) }}" class="text-blue-600 hover:text-blue-900">View Results</a>
+                                            @else
+                                                <form method="POST" action="{{ route('admin.contests.simulate', $contest->id) }}" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="bg-orange-500 text-white px-3 py-1 text-sm rounded hover:bg-orange-700">
+                                                        Simulate
+                                                    </button>
+                                                </form>
+
+                                                @if($contest->canBeCancelled())
+                                                    <button onclick="showCancelModal({{ $contest->id }}, '{{ $contest->name }}', {{ $contest->current_entries }}, {{ $contest->getTotalRefundAmount() }})"
+                                                            class="bg-red-500 text-white px-3 py-1 text-sm rounded hover:bg-red-700">
+                                                        Cancel
+                                                    </button>
+                                                @endif
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -98,4 +110,61 @@
             </div>
         </div>
     </div>
+
+    <!-- Cancel Contest Modal -->
+    <div id="cancelModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Cancel Contest</h3>
+
+                <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                    <p class="text-sm text-yellow-800 font-semibold mb-2">Contest: <span id="modal-contest-name"></span></p>
+                    <p class="text-sm text-gray-700">Entries: <span id="modal-entries"></span></p>
+                    <p class="text-sm text-gray-700">Total Refund: <span id="modal-refund" class="font-bold"></span> points</p>
+                </div>
+
+                <p class="text-sm text-gray-600 mb-4">
+                    All participants will receive a full refund of their entry fees. This action cannot be undone.
+                </p>
+
+                <form id="cancelForm" method="POST" action="">
+                    @csrf
+                    <input type="hidden" name="cancellation_reason" value="Contest cancelled by admin">
+
+                    <div class="flex gap-3">
+                        <button type="button"
+                                onclick="hideCancelModal()"
+                                class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="flex-1 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700">
+                            Confirm Cancellation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showCancelModal(contestId, contestName, entries, refund) {
+            document.getElementById('modal-contest-name').textContent = contestName;
+            document.getElementById('modal-entries').textContent = entries;
+            document.getElementById('modal-refund').textContent = refund.toLocaleString();
+            document.getElementById('cancelForm').action = `/admin/contests/${contestId}/cancel`;
+            document.getElementById('cancelModal').classList.remove('hidden');
+        }
+
+        function hideCancelModal() {
+            document.getElementById('cancelModal').classList.add('hidden');
+        }
+
+        // Close modal on outside click
+        document.getElementById('cancelModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideCancelModal();
+            }
+        });
+    </script>
 </x-app-layout>

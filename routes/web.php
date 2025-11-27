@@ -55,6 +55,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/contests/create', [AdminController::class, 'createContest'])->name('contests.create');
     Route::post('/contests', [ContestController::class, 'store'])->name('contests.store');
+    Route::post('/contests/{id}/cancel', [ContestController::class, 'cancel'])->name('contests.cancel');
     Route::post('/contests/{id}/simulate', [SimulationController::class, 'simulate'])->name('contests.simulate');
 
     // Data update routes

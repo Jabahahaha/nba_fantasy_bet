@@ -18,6 +18,11 @@
                 <button @click="tab = 'completed'" :class="tab === 'completed' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'" class="px-4 py-2 rounded-md">
                     Completed ({{ $completedLineups->count() }})
                 </button>
+                @if($cancelledLineups->count() > 0)
+                    <button @click="tab = 'cancelled'" :class="tab === 'cancelled' ? 'bg-red-500 text-white' : 'bg-white text-gray-700'" class="px-4 py-2 rounded-md">
+                        Cancelled ({{ $cancelledLineups->count() }})
+                    </button>
+                @endif
             </div>
 
             <!-- Upcoming Lineups -->
@@ -105,6 +110,42 @@
                         </div>
                     @empty
                         <p class="text-gray-500 text-center">No completed lineups.</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Cancelled Lineups -->
+            <div x-show="tab === 'cancelled'" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6">
+                    @forelse($cancelledLineups as $lineup)
+                        <div class="border-b pb-4 mb-4 bg-red-50 p-4 rounded">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-bold text-lg text-gray-900">{{ $lineup->lineup_name ?? 'Lineup #' . $lineup->id }}</h3>
+                                        <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-semibold">
+                                            CANCELLED
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">{{ $lineup->contest->name }}</p>
+                                    <div class="mt-2 p-3 bg-white border border-red-200 rounded">
+                                        <p class="text-xs text-gray-500 mb-1">This contest was cancelled</p>
+                                        <p class="text-sm text-green-600 font-semibold">Refunded: {{ number_format($lineup->contest->entry_fee) }} pts</p>
+                                        @if($lineup->contest->cancellation_reason)
+                                            <p class="text-xs text-gray-600 mt-2"><strong>Reason:</strong> {{ $lineup->contest->cancellation_reason }}</p>
+                                        @endif
+                                        @if($lineup->contest->cancelled_at)
+                                            <p class="text-xs text-gray-400 mt-1">Cancelled {{ $lineup->contest->cancelled_at->diffForHumans() }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                                <a href="{{ route('lineups.show', $lineup->id) }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-700">
+                                    View
+                                </a>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-gray-500 text-center">No cancelled lineups.</p>
                     @endforelse
                 </div>
             </div>
