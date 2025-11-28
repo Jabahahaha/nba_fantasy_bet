@@ -158,9 +158,33 @@ The test suite covers:
 -  Points System
 -  Access Control
 
+## Missing Features to Add
+
+### Transaction History
+**Priority: High**
+
+Currently missing:
+- No record of point transactions
+- Users can't see entry fees paid
+- Users can't see prizes won
+- Important for transparency and user trust
+
+Recommended implementation:
+- Create `transactions` table with columns: user_id, type (entry_fee, prize, deposit, withdrawal), amount, contest_id, description, created_at
+- Add Transaction model with relationships to User and Contest
+- Create transaction history page showing all user transactions
+- Record transactions when:
+  - User enters a contest (deduct entry fee)
+  - User wins a prize (add winnings)
+  - Admin adjusts user balance
+- Display transaction history with filters (date range, type)
+- Show running balance after each transaction
+- Add tests for transaction recording and history display
+
 ## Future Test Additions
 
 Consider adding tests for:
+- Transaction history tracking
 - Payment processing (if added)
 - Email notifications (if added)
 - Real-time updates (if added)

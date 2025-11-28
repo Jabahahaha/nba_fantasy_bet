@@ -22,6 +22,9 @@
                     <a href="{{ route('contests.history') }}" class="px-4 py-2 text-sm font-semibold rounded-lg {{ request()->routeIs('contests.history') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:text-white hover:bg-gray-800' }} transition">
                         History
                     </a>
+                    <a href="{{ route('transactions.index') }}" class="px-4 py-2 text-sm font-semibold rounded-lg {{ request()->routeIs('transactions.*') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:text-white hover:bg-gray-800' }} transition">
+                        Transactions
+                    </a>
                     <a href="{{ route('leaderboards.index') }}" class="px-4 py-2 text-sm font-semibold rounded-lg {{ request()->routeIs('leaderboards.*') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:text-white hover:bg-gray-800' }} transition">
                         Leaderboards
                     </a>
@@ -100,6 +103,9 @@
             </a>
             <a href="{{ route('contests.history') }}" class="block px-4 py-3 text-base font-semibold rounded-lg {{ request()->routeIs('contests.history') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }} transition">
                 History
+            </a>
+            <a href="{{ route('transactions.index') }}" class="block px-4 py-3 text-base font-semibold rounded-lg {{ request()->routeIs('transactions.*') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }} transition">
+                Transactions
             </a>
             <a href="{{ route('leaderboards.index') }}" class="block px-4 py-3 text-base font-semibold rounded-lg {{ request()->routeIs('leaderboards.*') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }} transition">
                 Leaderboards

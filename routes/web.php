@@ -38,6 +38,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Leaderboards
     Route::get('/leaderboards', [LeaderboardController::class, 'index'])->name('leaderboards.index');
 
+    // Transactions
+    Route::get('/transactions', [App\Http\Controllers\TransactionController::class, 'index'])->name('transactions.index');
+
     // Games
     Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
 
