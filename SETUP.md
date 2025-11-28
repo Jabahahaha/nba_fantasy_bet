@@ -401,23 +401,3 @@ npm run build
 ```
 
 ---
-
-## You're Ready!
-
-Your NBA Fantasy Bet platform is now fully set up and ready to use!
-
-**What's Next?**
-1. Login as admin
-2. Create your first contest
-3. Register test users
-4. Build lineups
-5. Simulate and see results!
-
-**Need Help?**
-- Check Laravel 12 documentation
-- Review code comments in controllers/services
-- Check routes in `routes/web.php`
-
----
-
-**Built by Mihai Landreev** 🚀
