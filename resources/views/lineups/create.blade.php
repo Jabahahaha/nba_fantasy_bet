@@ -191,8 +191,12 @@
                                        class="w-full mb-4 bg-gray-900 border-gray-600 text-white rounded-lg focus:border-green-500 focus:ring-green-500">
 
                                 <template x-for="(slot, index) in slots">
-                                    <input type="hidden" :name="'players[' + index + '][player_id]'" :value="slot.player ? slot.player.id : ''">
-                                    <input type="hidden" :name="'players[' + index + '][position_slot]'" :value="slot.position">
+                                    <template x-if="slot.player">
+                                        <div>
+                                            <input type="hidden" :name="'players[' + index + '][player_id]'" :value="slot.player.id">
+                                            <input type="hidden" :name="'players[' + index + '][position_slot]'" :value="slot.position">
+                                        </div>
+                                    </template>
                                 </template>
 
                                 <button type="submit"
