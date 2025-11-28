@@ -19,12 +19,10 @@ class TransactionController extends Controller
             ->with('contest')
             ->orderBy('created_at', 'desc');
 
-        // Filter by type if provided
         if ($request->filled('type') && $request->type !== 'all') {
             $query->where('type', $request->type);
         }
 
-        // Filter by date range if provided
         if ($request->filled('from_date')) {
             $query->whereDate('created_at', '>=', $request->from_date);
         }
@@ -35,7 +33,6 @@ class TransactionController extends Controller
 
         $transactions = $query->paginate(25);
 
-        // Calculate summary statistics
         $stats = [
             'total_deposits' => Transaction::where('user_id', $user->id)
                 ->where('amount', '>', 0)

@@ -42,7 +42,6 @@ class SimulateGames extends Command
 
         $this->info("Checking for games to simulate on {$date}...");
 
-        // Get all games for the date that have passed their start time
         $games = Game::whereDate('game_date', $date)
             ->where('status', 'scheduled')
             ->where('start_time', '<=', now())

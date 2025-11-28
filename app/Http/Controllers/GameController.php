@@ -12,10 +12,8 @@ class GameController extends Controller
      */
     public function show(Game $game)
     {
-        // Load player stats with player details
         $game->load(['playerStats.player']);
 
-        // Separate stats by team and sort by minutes per game (descending)
         $visitorStats = $game->playerStats->filter(function ($stat) use ($game) {
             return $stat->player->team === $game->visitor_team;
         })->sortByDesc(function ($stat) {

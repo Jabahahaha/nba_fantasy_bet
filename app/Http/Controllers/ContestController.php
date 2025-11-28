@@ -78,14 +78,12 @@ class ContestController extends Controller
             'lock_time.date' => 'Lock time must be a valid date and time.',
         ]);
 
-        // Calculate prize pool (assuming 10% rake)
         $validated['prize_pool'] = (int) ($validated['entry_fee'] * $validated['max_entries'] * 0.9);
         $validated['status'] = 'upcoming';
         $validated['current_entries'] = 0;
 
         $contest = Contest::create($validated);
 
-        // Calculate payout structure
         $contest->calculatePrizes();
 
         return redirect()->route('contests.show', $contest->id)
@@ -127,7 +125,6 @@ class ContestController extends Controller
     {
         $user = Auth::user();
 
-        // Get all contests user has entered (with completed status)
         $contests = Contest::whereHas('lineups', function($query) use ($user) {
             $query->where('user_id', $user->id);
         })
@@ -139,7 +136,6 @@ class ContestController extends Controller
         ->orderBy('contest_date', 'desc')
         ->get();
 
-        // Calculate user statistics
         $totalContests = $contests->count();
         $totalWinnings = $contests->sum(function($contest) use ($user) {
             return $contest->lineups->where('user_id', $user->id)->sum('prize_won');
@@ -148,7 +144,6 @@ class ContestController extends Controller
             return $contest->entry_fee * $contest->lineups->where('user_id', $user->id)->count();
         });
 
-        // Calculate win rate (top 3 finishes)
         $topThreeFinishes = $contests->filter(function($contest) use ($user) {
             $lineup = $contest->lineups->where('user_id', $user->id)->first();
             return $lineup && $lineup->final_rank && $lineup->final_rank <= 3;
@@ -156,7 +151,6 @@ class ContestController extends Controller
 
         $winRate = $totalContests > 0 ? round(($topThreeFinishes / $totalContests) * 100, 1) : 0;
 
-        // Calculate average finish
         $finishes = $contests->map(function($contest) use ($user) {
             $lineup = $contest->lineups->where('user_id', $user->id)->first();
             return $lineup ? $lineup->final_rank : null;
@@ -181,24 +175,19 @@ class ContestController extends Controller
     {
         $contest = Contest::findOrFail($id);
 
-        // Check if user is admin
         if (!Auth::user()->is_admin) {
             abort(403, 'Unauthorized action.');
         }
 
-        // Check if contest can be cancelled
         if (!$contest->canBeCancelled()) {
             return back()->with('error', 'This contest cannot be cancelled. It may already be completed or cancelled.');
         }
 
-        // Get cancellation reason (optional, defaults to generic message)
         $cancellationReason = $request->input('cancellation_reason', 'Contest cancelled by admin');
 
-        // Calculate refund information
         $affectedUsers = $contest->getAffectedUsersCount();
         $totalRefund = $contest->getTotalRefundAmount();
 
-        // Cancel the contest
         if ($contest->cancel($cancellationReason)) {
             return redirect()->route('admin.dashboard')
                 ->with('success', "Contest '{$contest->name}' has been cancelled. {$affectedUsers} users will be refunded a total of {$totalRefund} points.");

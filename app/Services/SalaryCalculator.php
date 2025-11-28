@@ -18,7 +18,6 @@ class SalaryCalculator
         $mpg = $stats['mpg'] ?? 0;
         $position = $stats['position'] ?? 'C';
 
-        // Base calculation
         $base = ($ppg * 1.0 +
                  $rpg * 1.25 +
                  $apg * 1.5 +
@@ -26,7 +25,6 @@ class SalaryCalculator
                  $bpg * 2.0 -
                  $topg * 0.5) * 200;
 
-        // Position multiplier
         $positionMultipliers = [
             'PG' => 1.0,
             'SG' => 0.98,
@@ -36,7 +34,6 @@ class SalaryCalculator
         ];
         $positionMultiplier = $positionMultipliers[$position] ?? 1.0;
 
-        // Minutes multiplier
         if ($mpg >= 35) {
             $minutesMultiplier = 1.15;
         } elseif ($mpg >= 30) {
@@ -51,13 +48,10 @@ class SalaryCalculator
             $minutesMultiplier = 0.65;
         }
 
-        // Apply multipliers
         $salary = $base * $positionMultiplier * $minutesMultiplier;
 
-        // Ensure within bounds
         $salary = max(3000, min(12000, $salary));
 
-        // Round to nearest 100
         return (int) (round($salary / 100) * 100);
     }
 }

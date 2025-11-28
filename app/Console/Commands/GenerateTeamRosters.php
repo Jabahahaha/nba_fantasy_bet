@@ -28,7 +28,6 @@ class GenerateTeamRosters extends Command
     {
         $this->info("Generating team rosters based on minutes per game...\n");
 
-        // Get all unique teams
         $teams = Player::select('team')
             ->distinct()
             ->orderBy('team')
@@ -37,7 +36,6 @@ class GenerateTeamRosters extends Command
         $allRosters = [];
 
         foreach ($teams as $team) {
-            // Get top 10 players by minutes for this team
             $players = Player::where('team', $team)
                 ->where('is_playing', true)
                 ->orderBy('mpg', 'desc')
@@ -65,7 +63,6 @@ class GenerateTeamRosters extends Command
                 })
             );
 
-            // Calculate roster stats
             $totalSalary = $players->sum('salary');
             $avgMinutes = $players->avg('mpg');
             $avgPoints = $players->avg('ppg');
@@ -74,7 +71,6 @@ class GenerateTeamRosters extends Command
             $this->info("  Avg Minutes: " . number_format($avgMinutes, 1));
             $this->info("  Avg Points: " . number_format($avgPoints, 1) . "\n");
 
-            // Store roster data
             $allRosters[$team] = [
                 'team' => $team,
                 'roster' => $players->map(function($player) {
@@ -102,14 +98,12 @@ class GenerateTeamRosters extends Command
         $this->info("Total Teams: " . $teams->count());
         $this->info("Total Rosters Generated: " . count($allRosters));
 
-        // Save to file if requested
         if ($this->option('save')) {
             $filename = storage_path('app/team_rosters.json');
             file_put_contents($filename, json_encode($allRosters, JSON_PRETTY_PRINT));
             $this->info("\n✓ Rosters saved to: {$filename}");
         }
 
-        // Show position breakdown across all teams
         $this->showPositionBreakdown($allRosters);
 
         return 0;

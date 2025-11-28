@@ -30,7 +30,6 @@ class SetTeamRosters extends Command
 
         $this->info("Setting team rosters (Top {$topCount} by minutes)...\n");
 
-        // Get all unique teams
         $teams = Player::select('team')
             ->distinct()
             ->orderBy('team')
@@ -40,7 +39,6 @@ class SetTeamRosters extends Command
         $totalBench = 0;
 
         foreach ($teams as $team) {
-            // Get all players for this team, ordered by minutes
             $players = Player::where('team', $team)
                 ->where('is_playing', true)
                 ->orderBy('mpg', 'desc')

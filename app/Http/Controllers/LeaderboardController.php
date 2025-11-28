@@ -15,7 +15,6 @@ class LeaderboardController extends Controller
      */
     public function index()
     {
-        // Top Winners - Users with highest total winnings
         $topWinners = User::select('users.*')
             ->selectRaw('COALESCE(SUM(lineups.prize_won), 0) as total_winnings')
             ->leftJoin('lineups', 'users.id', '=', 'lineups.user_id')
@@ -25,7 +24,6 @@ class LeaderboardController extends Controller
             ->limit(10)
             ->get();
 
-        // Most Active - Users with most contests entered
         $mostActive = User::select('users.*')
             ->selectRaw('COUNT(DISTINCT lineups.contest_id) as contests_entered')
             ->leftJoin('lineups', 'users.id', '=', 'lineups.user_id')
@@ -35,7 +33,6 @@ class LeaderboardController extends Controller
             ->limit(10)
             ->get();
 
-        // Best Win Rate - Users with highest percentage of top 3 finishes (min 5 contests)
         $bestWinRate = User::select('users.*')
             ->selectRaw('COUNT(DISTINCT lineups.contest_id) as contests_entered')
             ->selectRaw('SUM(CASE WHEN lineups.final_rank <= 3 THEN 1 ELSE 0 END) as top_three_finishes')
@@ -50,7 +47,6 @@ class LeaderboardController extends Controller
             ->limit(10)
             ->get();
 
-        // Highest Single Score - Best single contest performance
         $highestScores = Lineup::select('lineups.*', 'users.name as user_name', 'contests.name as contest_name', 'contests.contest_date')
             ->join('users', 'lineups.user_id', '=', 'users.id')
             ->join('contests', 'lineups.contest_id', '=', 'contests.id')
@@ -60,7 +56,6 @@ class LeaderboardController extends Controller
             ->limit(10)
             ->get();
 
-        // Most Profitable - Highest profit (winnings - entry fees)
         $mostProfitable = User::select('users.*')
             ->selectRaw('COALESCE(SUM(lineups.prize_won), 0) as total_winnings')
             ->selectRaw('COALESCE(SUM(contests.entry_fee), 0) as total_spent')

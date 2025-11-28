@@ -104,7 +104,6 @@ class Game extends Model
         $visitorScore = 0;
         $homeScore = 0;
 
-        // Sum up points for each team and save individual player stats
         foreach ($playerStats as $playerId => $stats) {
             if ($stats['team'] === $this->visitor_team) {
                 $visitorScore += $stats['points'];
@@ -112,7 +111,6 @@ class Game extends Model
                 $homeScore += $stats['points'];
             }
 
-            // Save player stats for this game
             GamePlayerStat::updateOrCreate(
                 [
                     'game_id' => $this->id,
@@ -130,7 +128,6 @@ class Game extends Model
             );
         }
 
-        // Update game scores
         $this->visitor_score = $visitorScore;
         $this->home_score = $homeScore;
         $this->winner = $visitorScore > $homeScore ? $this->visitor_team : $this->home_team;
@@ -164,10 +161,8 @@ class Game extends Model
      */
     public function resetSimulation(): void
     {
-        // Delete all player stats for this game
         $this->playerStats()->delete();
 
-        // Reset game scores and status
         $this->visitor_score = null;
         $this->home_score = null;
         $this->winner = null;

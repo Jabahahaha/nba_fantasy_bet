@@ -58,11 +58,9 @@ class AdminController extends Controller
                 return back()->with('error', 'Failed to save uploaded file.');
             }
 
-            // Run import command
             $exitCode = \Artisan::call('import:players', ['file' => $filename]);
             $output = \Artisan::output();
 
-            // Clean up the uploaded file
             \Storage::delete($filename);
 
             if ($exitCode !== 0) {
@@ -101,11 +99,9 @@ class AdminController extends Controller
                 return back()->with('error', 'Failed to save uploaded file.');
             }
 
-            // Run import command
             $exitCode = \Artisan::call('import:games', ['file' => $filename]);
             $output = \Artisan::output();
 
-            // Clean up the uploaded file
             \Storage::delete($filename);
 
             if ($exitCode !== 0) {

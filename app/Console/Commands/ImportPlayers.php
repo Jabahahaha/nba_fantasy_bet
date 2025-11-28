@@ -9,28 +9,14 @@ use Illuminate\Support\Facades\Storage;
 
 class ImportPlayers extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'import:players {file=players.csv}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Import NBA players from CSV file';
 
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
         $filename = $this->argument('file');
 
-        // Try multiple locations
         $possiblePaths = [
             storage_path('app/' . $filename),
             base_path($filename),
@@ -57,7 +43,6 @@ class ImportPlayers extends Command
 
         $handle = fopen($filepath, 'r');
 
-        // Read header row
         $headers = fgetcsv($handle);
 
         $imported = 0;
@@ -65,21 +50,16 @@ class ImportPlayers extends Command
 
         while (($row = fgetcsv($handle)) !== false) {
             try {
-                // Map CSV columns to array
                 $data = array_combine($headers, $row);
 
-                // Skip if no player name
                 if (empty($data['Player'])) {
                     continue;
                 }
 
-                // Map position from CSV format (G, F, C, G-F, F-C, etc) to our format
                 $position = $this->normalizePosition($data['Pos'] ?? 'F');
 
-                // Extract team (handle multi-team like "DALLAL" -> "DAL")
                 $team = substr($data['Team'] ?? 'UNK', 0, 3);
 
-                // Calculate salary
                 $salary = SalaryCalculator::calculate([
                     'ppg' => (float) ($data['PTS/G_2'] ?? $data['PTS/G'] ?? 0),
                     'rpg' => (float) ($data['TRB'] ?? 0),
@@ -91,7 +71,6 @@ class ImportPlayers extends Command
                     'position' => $position,
                 ]);
 
-                // Create or update player
                 Player::updateOrCreate(
                     [
                         'name' => $data['Player'],
@@ -133,22 +112,18 @@ class ImportPlayers extends Command
         return 0;
     }
 
-    /**
-     * Normalize position from various formats to our standard (PG/SG/SF/PF/C)
-     */
     private function normalizePosition(string $pos): string
     {
-        // Map complex positions to primary position
         $posMap = [
-            'G' => 'PG',      // Guard -> Point Guard
-            'F' => 'SF',      // Forward -> Small Forward
-            'C' => 'C',       // Center
-            'G-F' => 'SG',    // Guard-Forward -> Shooting Guard
-            'F-G' => 'SF',    // Forward-Guard -> Small Forward
-            'F-C' => 'PF',    // Forward-Center -> Power Forward
-            'C-F' => 'C',     // Center-Forward -> Center
+            'G' => 'PG',
+            'F' => 'SF',
+            'C' => 'C',
+            'G-F' => 'SG',
+            'F-G' => 'SF',
+            'F-C' => 'PF',
+            'C-F' => 'C',
         ];
 
-        return $posMap[$pos] ?? 'SF'; // Default to SF if unknown
+        return $posMap[$pos] ?? 'SF';
     }
 }

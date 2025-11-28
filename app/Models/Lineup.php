@@ -88,20 +88,17 @@ class Lineup extends Model
         $positions = $players->pluck('pivot.position_slot')->toArray();
         $requiredPositions = ['PG', 'SG', 'SF', 'PF', 'C', 'G', 'F', 'UTIL'];
 
-        // Check all required slots are filled
         foreach ($requiredPositions as $required) {
             if (!in_array($required, $positions)) {
                 return false;
             }
         }
 
-        // Validate G slot has a guard
         $gSlotPlayer = $players->firstWhere('pivot.position_slot', 'G');
         if ($gSlotPlayer && !in_array($gSlotPlayer->position, ['PG', 'SG'])) {
             return false;
         }
 
-        // Validate F slot has a forward
         $fSlotPlayer = $players->firstWhere('pivot.position_slot', 'F');
         if ($fSlotPlayer && !in_array($fSlotPlayer->position, ['SF', 'PF'])) {
             return false;

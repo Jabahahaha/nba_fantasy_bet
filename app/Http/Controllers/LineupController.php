@@ -24,16 +24,13 @@ class LineupController extends Controller
                 ->with('error', 'This contest is no longer open for entries.');
         }
 
-        // Check if user has enough points
         if (Auth::user()->points_balance < $contest->entry_fee) {
             return redirect()->route('contests.index')
                 ->with('error', 'Insufficient points balance.');
         }
 
-        // Get teams playing on contest date
         $teamsPlaying = \App\Models\Game::getTeamsPlayingOnDate($contest->contest_date);
 
-        // Only show players whose teams are playing on the contest date
         $players = Player::where('is_playing', true)
             ->whereIn('team', $teamsPlaying)
             ->orderBy('salary', 'desc')
@@ -79,16 +76,13 @@ class LineupController extends Controller
             return back()->with('error', "Insufficient points balance. You need {$needed} more points to enter this contest (Entry fee: {$contest->entry_fee} points, Your balance: {$user->points_balance} points).");
         }
 
-        // Check if user has reached max entries for this contest
         if (!$contest->canUserEnter($user->id)) {
             return back()->with('error', "You have reached the maximum number of entries ({$contest->max_entries_per_user}) for this contest. Cannot submit additional lineups.");
         }
 
-        // Get selected players
         $playerIds = collect($validated['players'])->pluck('player_id')->toArray();
         $players = Player::whereIn('id', $playerIds)->get()->keyBy('id');
 
-        // Calculate total salary
         $totalSalary = 0;
         foreach ($playerIds as $playerId) {
             $totalSalary += $players[$playerId]->salary;
@@ -99,7 +93,6 @@ class LineupController extends Controller
             return back()->with('error', "Total salary of \${$totalSalary} exceeds the \$50,000 salary cap by \${$over}. Please adjust your lineup.");
         }
 
-        // Validate position requirements
         $positionSlots = collect($validated['players'])->pluck('position_slot')->toArray();
         $requiredSlots = ['PG', 'SG', 'SF', 'PF', 'C', 'G', 'F', 'UTIL'];
 
@@ -109,7 +102,6 @@ class LineupController extends Controller
             }
         }
 
-        // Validate G slot has guard
         foreach ($validated['players'] as $playerData) {
             if ($playerData['position_slot'] === 'G') {
                 $player = $players[$playerData['player_id']];
@@ -119,7 +111,6 @@ class LineupController extends Controller
             }
         }
 
-        // Validate F slot has forward
         foreach ($validated['players'] as $playerData) {
             if ($playerData['position_slot'] === 'F') {
                 $player = $players[$playerData['player_id']];
@@ -129,16 +120,13 @@ class LineupController extends Controller
             }
         }
 
-        // Create lineup in transaction
         DB::beginTransaction();
 
         try {
-            // Deduct entry fee
             if (!$user->deductPoints($contest->entry_fee, 'entry_fee', "Entry fee for {$contest->name}", $contest->id)) {
                 throw new \Exception('Failed to deduct entry fee.');
             }
 
-            // Create lineup
             $lineup = Lineup::create([
                 'user_id' => $user->id,
                 'contest_id' => $contest->id,
@@ -146,7 +134,6 @@ class LineupController extends Controller
                 'total_salary_used' => $totalSalary,
             ]);
 
-            // Add players to lineup
             foreach ($validated['players'] as $playerData) {
                 LineupPlayer::create([
                     'lineup_id' => $lineup->id,
@@ -155,10 +142,8 @@ class LineupController extends Controller
                 ]);
             }
 
-            // Update contest entry count
             $contest->increment('current_entries');
 
-            // Update user stats
             $user->increment('total_contests_entered');
 
             DB::commit();
@@ -222,7 +207,6 @@ class LineupController extends Controller
         $lineup = Lineup::with(['contest', 'lineupPlayers.player', 'user'])
             ->findOrFail($id);
 
-        // Check authorization
         if ($lineup->user_id !== Auth::id() && !Auth::user()->is_admin) {
             abort(403);
         }
@@ -238,21 +222,17 @@ class LineupController extends Controller
         $lineup = Lineup::with(['contest', 'lineupPlayers.player'])
             ->findOrFail($id);
 
-        // Check authorization
         if ($lineup->user_id !== Auth::id()) {
             abort(403);
         }
 
-        // Check if contest is still open
         if ($lineup->contest->isLocked()) {
             return redirect()->route('lineups.show', $id)
                 ->with('error', 'Contest is locked. Cannot edit lineup.');
         }
 
-        // Get teams playing on contest date
         $teamsPlaying = \App\Models\Game::getTeamsPlayingOnDate($lineup->contest->contest_date);
 
-        // Get available players
         $players = Player::where('is_playing', true)
             ->whereIn('team', $teamsPlaying)
             ->orderBy('salary', 'desc')
@@ -283,12 +263,10 @@ class LineupController extends Controller
     {
         $lineup = Lineup::findOrFail($id);
 
-        // Check authorization
         if ($lineup->user_id !== Auth::id()) {
             abort(403);
         }
 
-        // Check if contest is still open
         if ($lineup->contest->isLocked()) {
             return back()->with('error', 'This contest is locked and lineups can no longer be edited. The contest has already started or lock time has passed.');
         }
@@ -308,11 +286,9 @@ class LineupController extends Controller
             'players.*.position_slot.in' => 'Invalid position slot selected.',
         ]);
 
-        // Get selected players
         $playerIds = collect($validated['players'])->pluck('player_id')->toArray();
         $players = Player::whereIn('id', $playerIds)->get()->keyBy('id');
 
-        // Calculate total salary
         $totalSalary = 0;
         foreach ($playerIds as $playerId) {
             $totalSalary += $players[$playerId]->salary;
@@ -323,7 +299,6 @@ class LineupController extends Controller
             return back()->with('error', "Total salary of \${$totalSalary} exceeds the \$50,000 salary cap by \${$over}. Please adjust your lineup.");
         }
 
-        // Validate position requirements
         $positionSlots = collect($validated['players'])->pluck('position_slot')->toArray();
         $requiredSlots = ['PG', 'SG', 'SF', 'PF', 'C', 'G', 'F', 'UTIL'];
 
@@ -333,7 +308,6 @@ class LineupController extends Controller
             }
         }
 
-        // Validate G and F slots
         foreach ($validated['players'] as $playerData) {
             if ($playerData['position_slot'] === 'G') {
                 $player = $players[$playerData['player_id']];
@@ -352,15 +326,12 @@ class LineupController extends Controller
         DB::beginTransaction();
 
         try {
-            // Update lineup name and salary
             $lineup->lineup_name = $validated['lineup_name'] ?? $lineup->lineup_name;
             $lineup->total_salary_used = $totalSalary;
             $lineup->save();
 
-            // Delete old players
             $lineup->lineupPlayers()->delete();
 
-            // Add new players
             foreach ($validated['players'] as $playerData) {
                 LineupPlayer::create([
                     'lineup_id' => $lineup->id,

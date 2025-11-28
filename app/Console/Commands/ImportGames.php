@@ -29,7 +29,6 @@ class ImportGames extends Command
     {
         $filename = $this->argument('file');
 
-        // Try multiple locations
         $possiblePaths = [
             storage_path('app/' . $filename),
             base_path($filename),
@@ -56,7 +55,6 @@ class ImportGames extends Command
 
         $handle = fopen($filepath, 'r');
 
-        // Read header row
         $headers = fgetcsv($handle);
 
         $imported = 0;
@@ -64,21 +62,16 @@ class ImportGames extends Command
 
         while (($row = fgetcsv($handle)) !== false) {
             try {
-                // Map CSV columns to array
                 $data = array_combine($headers, $row);
 
-                // Skip if no date
                 if (empty($data['Date'])) {
                     continue;
                 }
 
-                // Parse date
                 $gameDate = Carbon::parse($data['Date']);
 
-                // Parse time (e.g., "7:00p" -> "19:00:00")
                 $startTime = $this->parseTime($data['Start (ET)'] ?? '7:00p');
 
-                // Extract team abbreviations
                 $visitorTeam = $this->getTeamAbbreviation($data['VisitorTeam'] ?? '');
                 $homeTeam = $this->getTeamAbbreviation($data['HomeTeam'] ?? '');
 
@@ -87,7 +80,6 @@ class ImportGames extends Command
                     continue;
                 }
 
-                // Create or update game
                 Game::updateOrCreate(
                     [
                         'game_date' => $gameDate->toDateString(),
@@ -121,7 +113,6 @@ class ImportGames extends Command
             $this->warn("Skipped: {$skipped} rows");
         }
 
-        // Show some stats
         $uniqueDates = Game::distinct('game_date')->count('game_date');
         $this->info("\nSchedule covers {$uniqueDates} unique dates");
 
@@ -133,21 +124,18 @@ class ImportGames extends Command
      */
     private function parseTime(string $time): string
     {
-        // Remove spaces
         $time = str_replace(' ', '', $time);
 
-        // Extract hour and minutes
         preg_match('/(\d+):(\d+)([ap])?/i', $time, $matches);
 
         if (count($matches) < 3) {
-            return '19:00:00'; // Default to 7pm
+            return '19:00:00';
         }
 
         $hour = (int) $matches[1];
         $minute = (int) $matches[2];
         $period = strtolower($matches[3] ?? 'p');
 
-        // Convert to 24-hour format
         if ($period === 'p' && $hour < 12) {
             $hour += 12;
         } elseif ($period === 'a' && $hour === 12) {

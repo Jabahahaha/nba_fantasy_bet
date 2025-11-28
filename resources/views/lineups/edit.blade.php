@@ -12,10 +12,8 @@
 
     <div class="py-8" x-data="lineupBuilder()">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Error Messages -->
             <x-form-errors />
 
-            <!-- Salary Cap Bar -->
             <div class="mb-6 bg-gray-800 border border-gray-700 rounded-xl p-5">
                 <div class="flex items-center justify-between mb-3">
                     <div>
@@ -31,7 +29,6 @@
                         </p>
                     </div>
                 </div>
-                <!-- Progress Bar -->
                 <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
                     <div class="h-full transition-all duration-300"
                          :class="totalSalary > 50000 ? 'bg-red-500' : 'bg-accent-green'"
@@ -45,19 +42,16 @@
             </div>
 
             <div class="grid lg:grid-cols-5 gap-6">
-                <!-- Player Pool (Left Side - 3 columns) -->
                 <div class="lg:col-span-3">
                     <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
                         <div class="p-6 border-b border-gray-700">
                             <h3 class="text-xl font-black text-white mb-4">Player Pool</h3>
 
-                            <!-- Search Bar -->
                             <input type="text"
                                    x-model="searchQuery"
                                    placeholder="🔍 Search players..."
                                    class="w-full mb-4 bg-gray-900 border-gray-600 text-white placeholder-gray-500 rounded-lg focus:border-green-500 focus:ring-green-500">
 
-                            <!-- Filters -->
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                                 <select x-model="filterPosition" class="bg-gray-900 border-gray-600 text-white text-sm rounded-lg focus:border-green-500">
                                     <option value="">All Positions</option>
@@ -96,7 +90,6 @@
                             </div>
                         </div>
 
-                        <!-- Player List -->
                         <div class="p-4 space-y-2 max-h-[700px] overflow-y-auto">
                             @foreach($players as $player)
                                 <div x-show="filterPlayer({{ $player->id }}, '{{ addslashes($player->name) }}', '{{ $player->position }}', '{{ $player->team }}', {{ $player->salary }})"
@@ -127,14 +120,12 @@
                     </div>
                 </div>
 
-                <!-- Lineup (Right Side - 2 columns) -->
                 <div class="lg:col-span-2">
                     <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden sticky top-6">
                         <div class="p-6 border-b border-gray-700">
                             <h3 class="text-xl font-black text-white">Your Lineup</h3>
                         </div>
 
-                        <!-- Roster Slots -->
                         <div class="p-4 space-y-2">
                             <template x-for="(slot, index) in slots" :key="index">
                                 <div class="bg-gray-900 border border-gray-700 rounded-lg p-4">
@@ -179,7 +170,6 @@
                             </template>
                         </div>
 
-                        <!-- Submit Form -->
                         <div class="p-6 border-t border-gray-700">
                             <form method="POST" action="{{ route('lineups.update', $lineup->id) }}" @submit="prepareSubmit($event)">
                                 @csrf
@@ -192,8 +182,12 @@
                                        class="w-full mb-4 bg-gray-900 border-gray-600 text-white rounded-lg focus:border-green-500 focus:ring-green-500">
 
                                 <template x-for="(slot, index) in slots">
-                                    <input type="hidden" :name="'players[' + index + '][player_id]'" :value="slot.player ? slot.player.id : ''">
-                                    <input type="hidden" :name="'players[' + index + '][position_slot]'" :value="slot.position">
+                                    <template x-if="slot.player">
+                                        <div>
+                                            <input type="hidden" :name="'players[' + index + '][player_id]'" :value="slot.player.id">
+                                            <input type="hidden" :name="'players[' + index + '][position_slot]'" :value="slot.position">
+                                        </div>
+                                    </template>
                                 </template>
 
                                 <button type="submit"
@@ -234,7 +228,6 @@
                 lineupName: '{{ $lineup->lineup_name ?? "" }}',
 
                 init() {
-                    // Pre-populate lineup with existing players
                     const existingPlayers = @json($existingLineup);
 
                     existingPlayers.forEach(item => {
@@ -248,36 +241,29 @@
                 },
 
                 addPlayer(id, name, position, salary, team, ppg) {
-                    // Check if player already added
                     if (this.slots.some(slot => slot.player && slot.player.id === id)) {
                         this.showError(`${name} is already in your lineup!`);
                         return;
                     }
 
-                    // Check if adding this player would exceed salary cap
                     if (this.totalSalary + salary > 50000) {
                         const over = (this.totalSalary + salary) - 50000;
                         this.showError(`Cannot add ${name}. This would exceed salary cap by $${over.toLocaleString()}.`);
                         return;
                     }
 
-                    // Find empty matching slot
                     let slotIndex = -1;
 
-                    // Try exact position match first
                     slotIndex = this.slots.findIndex(slot => !slot.player && slot.position === position);
 
-                    // Try G slot for guards
                     if (slotIndex === -1 && (position === 'PG' || position === 'SG')) {
                         slotIndex = this.slots.findIndex(slot => !slot.player && slot.position === 'G');
                     }
 
-                    // Try F slot for forwards
                     if (slotIndex === -1 && (position === 'SF' || position === 'PF')) {
                         slotIndex = this.slots.findIndex(slot => !slot.player && slot.position === 'F');
                     }
 
-                    // Try UTIL slot
                     if (slotIndex === -1) {
                         slotIndex = this.slots.findIndex(slot => !slot.player && slot.position === 'UTIL');
                     }
@@ -307,22 +293,18 @@
                 },
 
                 filterPlayer(id, name, position, team, salary) {
-                    // Check search query
                     if (this.searchQuery && !name.toLowerCase().includes(this.searchQuery.toLowerCase())) {
                         return false;
                     }
 
-                    // Check position filter
                     if (this.filterPosition && position !== this.filterPosition) {
                         return false;
                     }
 
-                    // Check team filter
                     if (this.filterTeam && team !== this.filterTeam) {
                         return false;
                     }
 
-                    // Check salary filter
                     if (this.filterSalary) {
                         if (this.filterSalary === '10000+' && salary < 10000) return false;
                         if (this.filterSalary === '8000-10000' && (salary < 8000 || salary >= 10000)) return false;

@@ -18,10 +18,8 @@ class GameSimulator
     {
         $isLowVolumeScorer = $player->ppg < 20;
 
-        // Generate performance multiplier using bell curve with low-volume adjustments
         $multiplier = $this->generatePerformanceMultiplierForPlayer($player);
 
-        // Simulate each stat with the multiplier
         $points = $this->simulateStat($player->ppg, $multiplier, 0, 50, $isLowVolumeScorer);
         $rebounds = $this->simulateStat($player->rpg, $multiplier, 0, 20, $isLowVolumeScorer);
         $assists = $this->simulateStat($player->apg, $multiplier, 0, 20, $isLowVolumeScorer);
@@ -100,11 +98,8 @@ class GameSimulator
      */
     private function simulateStat(float $average, float $multiplier, int $min, int $max, bool $isLowVolumeScorer = false): int
     {
-        // Apply multiplier
         $value = $average * $multiplier;
 
-        // Add random variance.
-        // Low-volume scorers are more volatile and skewed towards underperformance.
         if ($isLowVolumeScorer) {
             $variance = mt_rand(-25, 12) / 100;
         } else {
@@ -112,7 +107,6 @@ class GameSimulator
         }
         $value = $value * (1 + $variance);
 
-        // Ensure within bounds
         $value = max($min, min($max, $value));
 
         return (int) round($value);
@@ -134,7 +128,6 @@ class GameSimulator
 
         $total = $points + $rebounds + $assists + $steals + $blocks - $turnovers;
 
-        // Check for double-double (2 stats >= 10)
         $doubleDigitStats = 0;
         if ($stats['points'] >= 10) $doubleDigitStats++;
         if ($stats['rebounds'] >= 10) $doubleDigitStats++;
@@ -143,10 +136,8 @@ class GameSimulator
         if ($stats['blocks'] >= 10) $doubleDigitStats++;
 
         if ($doubleDigitStats >= 3) {
-            // Triple-double
             $total += 3.0;
         } elseif ($doubleDigitStats >= 2) {
-            // Double-double
             $total += 1.5;
         }
 
@@ -159,7 +150,6 @@ class GameSimulator
      */
     public function simulateContest(Contest $contest): void
     {
-        // First, ensure all games for the contest date are simulated
         $games = Game::getGamesForDate($contest->contest_date);
         foreach ($games as $game) {
             if (!$game->isSimulated()) {
@@ -169,19 +159,15 @@ class GameSimulator
 
         $lineups = $contest->lineups()->with(['lineupPlayers.player'])->get();
 
-        // Get teams playing on contest date
         $teamsPlaying = Game::getTeamsPlayingOnDate($contest->contest_date);
 
-        // Simulate each lineup using existing game results
         foreach ($lineups as $lineup) {
             foreach ($lineup->lineupPlayers as $lineupPlayer) {
                 $player = $lineupPlayer->player;
 
-                // Check if player's team is playing today
                 $isPlaying = in_array($player->team, $teamsPlaying);
 
                 if (!$isPlaying) {
-                    // Player's team not playing - score 0 points
                     $lineupPlayer->simulated_points = 0;
                     $lineupPlayer->simulated_rebounds = 0;
                     $lineupPlayer->simulated_assists = 0;
@@ -193,11 +179,9 @@ class GameSimulator
                     continue;
                 }
 
-                // Get player's stats from the game that was already simulated
                 $game = Game::getGameForTeam($player->team, $contest->contest_date);
 
                 if (!$game || !$game->isSimulated()) {
-                    // Game not found or not simulated - shouldn't happen, but handle gracefully
                     $lineupPlayer->simulated_points = 0;
                     $lineupPlayer->simulated_rebounds = 0;
                     $lineupPlayer->simulated_assists = 0;
@@ -209,13 +193,11 @@ class GameSimulator
                     continue;
                 }
 
-                // Get player's stats from the game
                 $playerStat = GamePlayerStat::where('game_id', $game->id)
                     ->where('player_id', $player->id)
                     ->first();
 
                 if (!$playerStat) {
-                    // Player didn't play in this game (not in top 10) - score 0
                     $lineupPlayer->simulated_points = 0;
                     $lineupPlayer->simulated_rebounds = 0;
                     $lineupPlayer->simulated_assists = 0;
@@ -227,7 +209,6 @@ class GameSimulator
                     continue;
                 }
 
-                // Use existing stats from the game
                 $lineupPlayer->simulated_points = $playerStat->points;
                 $lineupPlayer->simulated_rebounds = $playerStat->rebounds;
                 $lineupPlayer->simulated_assists = $playerStat->assists;
@@ -238,11 +219,9 @@ class GameSimulator
                 $lineupPlayer->save();
             }
 
-            // Calculate total fantasy points for lineup
             $lineup->calculateFantasyPoints();
         }
 
-        // Rank lineups by fantasy points
         $rankedLineups = $contest->lineups()
             ->orderBy('fantasy_points_scored', 'desc')
             ->get();
@@ -254,10 +233,8 @@ class GameSimulator
             $rank++;
         }
 
-        // Calculate prize structure based on final entry count
         $contest->calculatePrizes();
 
-        // Distribute prizes
         $contest->distributePrizes();
     }
 
@@ -275,12 +252,10 @@ class GameSimulator
      */
     public function simulateGame(Game $game): void
     {
-        // Don't simulate if already simulated
         if ($game->isSimulated()) {
             return;
         }
 
-        // Get top 10 players by minutes per game for both teams
         $visitorPlayers = Player::where('team', $game->visitor_team)
             ->where('is_playing', true)
             ->orderByDesc('mpg')
@@ -295,7 +270,6 @@ class GameSimulator
 
         $allPlayers = $visitorPlayers->merge($homePlayers);
 
-        // Simulate performance for each player
         $playerPerformances = [];
         foreach ($allPlayers as $player) {
             $stats = $this->simulatePlayerPerformance($player);
@@ -313,7 +287,6 @@ class GameSimulator
             ];
         }
 
-        // Calculate and save game scores
         $game->calculateScores($playerPerformances);
     }
 }
